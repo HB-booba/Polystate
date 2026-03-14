@@ -1,4 +1,6 @@
+import { AsyncPipe, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { TodoFacade } from './store/facade';
 
 /**
@@ -83,7 +85,8 @@ import { TodoFacade } from './store/facade';
     </div>
   `,
     styleUrls: ['./app.component.css'],
-    standalone: false,
+    standalone: true,
+    imports: [AsyncPipe, NgFor, NgIf, NgClass, TitleCasePipe, FormsModule],
 })
 export class AppComponent {
     newTitle = '';
