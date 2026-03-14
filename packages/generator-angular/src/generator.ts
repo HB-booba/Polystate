@@ -206,13 +206,120 @@ function generateReducerHandlers(definition: StoreDefinition): string {
     const storeName = capitalize(name);
 
     return extractActions(definition)
-        .map(({ name: actionName }) => {
-            return `  on(${storeName}Actions.${actionName}, (state) => {
-    // TODO: Implement reducer logic
-    return state;
-  }),`;
+        .map(({ name: actionName, handler, paramCount }: { name: string; handler: (...args: unknown[]) => unknown; paramCount: number }) => {
+            const returnExpr = serializeHandlerForNgRx(
+                handler as (...args: unknown[]) => unknown,
+                paramCount
+            );
+            const paramList = paramCount > 1 ? '(state, { payload })' : '(state)';
+            return `  on(${storeName}Actions.${actionName}, ${paramList} => ${returnExpr}),`;
         })
         .join('\n');
+}
+
+function serializeHandlerForNgRx(
+    handler: (...args: unknown[]) => unknown,
+    paramCount: number
+): string {
+    const src = handler.toString();
+    const { stateParam, payloadParam } = extractNgRxParamNames(src);
+
+    let normalized = renameParam(src, stateParam, 'state');
+    if (payloadParam && paramCount > 1) {
+        normalized = renameParam(normalized, payloadParam, 'payload');
+    }
+
+    const returnExpr = extractArrowReturnExpr(normalized);
+    if (returnExpr === null) {
+        const fallbackSrc = handler.toString();
+        return paramCount > 1
+            ? `({ ...state, ...(${fallbackSrc})(state, payload) })`
+            : `({ ...state, ...(${fallbackSrc})(state) })`;
+    }
+    return returnExpr;
+}
+
+function extractNgRxParamNames(src: string): { stateParam: string; payloadParam: string | null } {
+    const match = src.match(
+        /^\s*(?:function\s*\w*\s*)?\(\s*([a-zA-Z_$][a-zA-Z0-9_$]*)(?:[^,)]*?)(?:,\s*([a-zA-Z_$][a-zA-Z0-9_$]*))?/
+    );
+    return {
+        stateParam: match?.[1] ?? 'state',
+        payloadParam: match?.[2] ?? null,
+    };
+}
+
+function renameParam(src: string, oldName: string, newName: string): string {
+    if (oldName === newName) return src;
+    // Expand shorthand object properties: { oldName, } → { oldName: newName, }
+    // so the object key name is preserved when the param is renamed.
+    const shorthandRe = new RegExp(`([{,]\\s*)\\b${oldName}\\b(?=\\s*[,}])`, 'g');
+    let result = src.replace(shorthandRe, `$1${oldName}: ${newName}`);
+    // Replace all remaining standalone occurrences (not preceded by `.` and not followed by `:`)
+    result = result.replace(
+        new RegExp(`(?<![.\\w])\\b${oldName}\\b(?![\\w:])`, 'g'),
+        newName
+    );
+    return result;
+}
+
+function extractArrowReturnExpr(src: string): string | null {
+    const arrowIdx = src.indexOf('=>');
+    if (arrowIdx === -1) return null;
+
+    let i = arrowIdx + 2;
+    while (i < src.length && /\s/.test(src.charAt(i))) i++;
+
+    if (src.charAt(i) === '(') {
+        // Parenthesized expression: => ({ ... })
+        return extractBalancedStr(src, i, '(', ')');
+    }
+
+    if (src.charAt(i) === '{') {
+        // Block body: => { ... return { ... }; }
+        const returnIdx = src.indexOf('return', i + 1);
+        if (returnIdx === -1) return null;
+        let j = returnIdx + 6;
+        while (j < src.length && /\s/.test(src.charAt(j))) j++;
+        if (src.charAt(j) === '(') {
+            return extractBalancedStr(src, j, '(', ')');
+        }
+        if (src.charAt(j) === '{') {
+            const inner = extractBalancedStr(src, j, '{', '}');
+            return inner ? `(${inner})` : null;
+        }
+    }
+
+    return null;
+}
+
+function extractBalancedStr(src: string, start: number, open: string, close: string): string | null {
+    if (src.charAt(start) !== open) return null;
+    let depth = 1;
+    let i = start + 1;
+    let inString = false;
+    let stringChar = '';
+
+    while (i < src.length && depth > 0) {
+        const ch = src.charAt(i);
+        if (inString) {
+            if (ch === '\\') { i += 2; continue; }
+            if (ch === stringChar) inString = false;
+        } else {
+            if (ch === '"' || ch === "'" || ch === '`') {
+                inString = true;
+                stringChar = ch;
+            } else if (ch === open) {
+                depth++;
+            } else if (ch === close) {
+                depth--;
+            }
+        }
+        i++;
+    }
+
+    if (depth !== 0) return null;
+    return src.slice(start, i);
 }
 
 function generateSelectorFunctions(
