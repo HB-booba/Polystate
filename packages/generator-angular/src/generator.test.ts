@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import todoDefinition from '../../../examples/angular-todo-generated/store.definition';
 import {
     generateAngularFacade,
     generateNgRxActions,
@@ -7,7 +8,6 @@ import {
     generateNgRxState,
     generateStoreModule,
 } from './generator';
-import todoDefinition from '../../../examples/angular-todo-generated/store.definition';
 
 describe('generator-angular', () => {
     describe('generateNgRxActions', () => {
