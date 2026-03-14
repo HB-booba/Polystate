@@ -7,8 +7,8 @@ import { TodoFacade } from './store/facade';
  * Root App Component
  */
 @Component({
-    selector: 'app-root',
-    template: `
+  selector: 'app-root',
+  template: `
     <div class="app">
       <header class="app-header">
         <h1>📝 Todo App</h1>
@@ -84,41 +84,41 @@ import { TodoFacade } from './store/facade';
       </main>
     </div>
   `,
-    styleUrls: ['./app.component.css'],
-    standalone: true,
-    imports: [AsyncPipe, NgFor, NgIf, NgClass, TitleCasePipe, FormsModule],
+  styleUrls: ['./app.component.css'],
+  standalone: true,
+  imports: [AsyncPipe, NgFor, NgIf, NgClass, TitleCasePipe, FormsModule],
 })
 export class AppComponent {
-    newTitle = '';
-    filters: Array<'all' | 'active' | 'completed'> = [
-        'all',
-        'active',
-        'completed',
-    ];
+  newTitle = '';
+  filters: Array<'all' | 'active' | 'completed'> = [
+    'all',
+    'active',
+    'completed',
+  ];
 
-    filteredTodos$ = this.todoFacade.filteredTodos$;
-    filter$ = this.todoFacade.filter$;
-    activeTodoCount$ = this.todoFacade.activeTodoCount$;
-    completedTodoCount$ = this.todoFacade.completedTodoCount$;
+  filteredTodos$ = this.todoFacade.filteredTodos$;
+  filter$ = this.todoFacade.filter$;
+  activeTodoCount$ = this.todoFacade.activeTodoCount$;
+  completedTodoCount$ = this.todoFacade.completedTodoCount$;
 
-    constructor(public todoFacade: TodoFacade) { }
+  constructor(public todoFacade: TodoFacade) { }
 
-    onAddTodo(): void {
-        if (this.newTitle.trim()) {
-            this.todoFacade.addTodo(this.newTitle);
-            this.newTitle = '';
-        }
+  onAddTodo(): void {
+    if (this.newTitle.trim()) {
+      this.todoFacade.addTodo(this.newTitle);
+      this.newTitle = '';
     }
+  }
 
-    onToggleTodo(id: number): void {
-        this.todoFacade.toggleTodo(id);
-    }
+  onToggleTodo(id: number): void {
+    this.todoFacade.toggleTodo(id);
+  }
 
-    onRemoveTodo(id: number): void {
-        this.todoFacade.removeTodo(id);
-    }
+  onRemoveTodo(id: number): void {
+    this.todoFacade.removeTodo(id);
+  }
 
-    onSetFilter(filter: 'all' | 'active' | 'completed'): void {
-        this.todoFacade.setFilter(filter);
-    }
+  onSetFilter(filter: 'all' | 'active' | 'completed'): void {
+    this.todoFacade.setFilter(filter);
+  }
 }
