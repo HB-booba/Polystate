@@ -75,8 +75,11 @@ export function asObservable<T, S>(
     store: Store<T>,
     selector?: Selector<T, S>
 ): Observable<T | S> {
-    const obs: Observable<T | S> = {
-        subscribe(observerOrNext, error, complete) {
+    // Build untyped then cast — TypeScript cannot verify object literals satisfy
+    // overloaded interface signatures, so we use `as unknown as` here while
+    // keeping full type safety for callers.
+    const obs = {
+        subscribe(observerOrNext: any, error?: any, complete?: any): Subscription {
             // Handle both callback and observer patterns
             let observer: Observer<T | S>;
 
@@ -123,7 +126,7 @@ export function asObservable<T, S>(
             return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
         },
     };
-    return obs;
+    return obs as unknown as Observable<T | S>;
 }
 
 /**
