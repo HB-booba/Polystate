@@ -13,7 +13,7 @@ describe('Middleware', () => {
     }
 
     describe('loggerMiddleware', () => {
-        it('should log actions', (done) => {
+        it('should log actions', async () => {
             const groupSpy = vi.spyOn(console, 'group');
             const logSpy = vi.spyOn(console, 'log');
             const groupEndSpy = vi.spyOn(console, 'groupEnd');
@@ -28,16 +28,14 @@ describe('Middleware', () => {
                 }
             );
 
-            store.dispatch('increment').then(() => {
-                expect(groupSpy).toHaveBeenCalledWith('[increment]');
-                expect(logSpy).toHaveBeenCalled();
-                expect(groupEndSpy).toHaveBeenCalled();
+            await store.dispatch('increment');
+            expect(groupSpy).toHaveBeenCalledWith('[increment]');
+            expect(logSpy).toHaveBeenCalled();
+            expect(groupEndSpy).toHaveBeenCalled();
 
-                groupSpy.mockRestore();
-                logSpy.mockRestore();
-                groupEndSpy.mockRestore();
-                done();
-            });
+            groupSpy.mockRestore();
+            logSpy.mockRestore();
+            groupEndSpy.mockRestore();
         });
     });
 
@@ -48,7 +46,7 @@ describe('Middleware', () => {
             mockStorage = {};
         });
 
-        it('should persist state to storage', (done) => {
+        it('should persist state to storage', async () => {
             const testStorage = {
                 getItem: (key: string) => mockStorage[key] ?? null,
                 setItem: (key: string, value: string) => {
@@ -74,10 +72,8 @@ describe('Middleware', () => {
                 }
             );
 
-            store.dispatch('increment').then(() => {
-                expect(mockStorage['test-store']).toBe(JSON.stringify({ count: 1 }));
-                done();
-            });
+            await store.dispatch('increment');
+            expect(mockStorage['test-store']).toBe(JSON.stringify({ count: 1 }));
         });
 
         it('should load persisted state', () => {
@@ -116,7 +112,7 @@ describe('Middleware', () => {
             expect(loaded).toBeNull();
         });
 
-        it('should handle storage errors gracefully', (done) => {
+        it('should handle storage errors gracefully', async () => {
             const errorStorage = {
                 getItem: () => {
                     throw new Error('Storage error');
@@ -142,16 +138,14 @@ describe('Middleware', () => {
                 }
             );
 
-            store.dispatch('increment').then(() => {
-                expect(errorSpy).toHaveBeenCalled();
-                errorSpy.mockRestore();
-                done();
-            });
+            await store.dispatch('increment');
+            expect(errorSpy).toHaveBeenCalled();
+            errorSpy.mockRestore();
         });
     });
 
     describe('devToolsMiddleware', () => {
-        it('should send actions to devtools if available', (done) => {
+        it('should send actions to devtools if available', async () => {
             const devtoolsMock = {
                 send: vi.fn(),
             };
@@ -169,18 +163,16 @@ describe('Middleware', () => {
                 }
             );
 
-            store.dispatch('increment').then(() => {
-                expect(devtoolsMock.send).toHaveBeenCalledWith(
-                    { type: 'increment', payload: undefined },
-                    { count: 1 }
-                );
+            await store.dispatch('increment');
+            expect(devtoolsMock.send).toHaveBeenCalledWith(
+                { type: 'increment', payload: undefined },
+                { count: 1 }
+            );
 
-                (window as any).__REDUX_DEVTOOLS_EXTENSION__ = original;
-                done();
-            });
+            (window as any).__REDUX_DEVTOOLS_EXTENSION__ = original;
         });
 
-        it('should handle missing devtools gracefully', (done) => {
+        it('should handle missing devtools gracefully', async () => {
             const original = (window as any).__REDUX_DEVTOOLS_EXTENSION__;
             delete (window as any).__REDUX_DEVTOOLS_EXTENSION__;
 
@@ -195,10 +187,8 @@ describe('Middleware', () => {
             );
 
             // Should not throw
-            store.dispatch('increment').then(() => {
-                (window as any).__REDUX_DEVTOOLS_EXTENSION__ = original;
-                done();
-            });
+            await store.dispatch('increment');
+            (window as any).__REDUX_DEVTOOLS_EXTENSION__ = original;
         });
     });
 });
