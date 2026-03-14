@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React, { createElement as h } from 'react';
 import { createStore } from '@polystate/core';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { createElement as h } from 'react';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  useStore,
-  useSelector,
-  useDispatch,
-  useSetState,
-  createStoreHooks,
   createStoreContext,
+  createStoreHooks,
+  useDispatch,
+  useSelector,
+  useSetState,
+  useStore,
 } from './index';
 
 describe('React Hooks', () => {

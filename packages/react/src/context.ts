@@ -1,6 +1,5 @@
-import { createElement } from 'react';
-import { createContext, useContext, ReactNode } from 'react';
 import type { Store } from '@polystate/core';
+import { createContext, createElement, ReactNode, useContext } from 'react';
 
 /**
  * Creates a React Context for a Polystate store.
