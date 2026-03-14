@@ -192,7 +192,7 @@ function getTypeFromValue(value: any, depth = 0): string {
 
 function generateActionCreators(definition: StoreDefinition): string {
     return extractActions(definition)
-        .map(({ name, paramCount }) => {
+        .map(({ name, paramCount }: { name: string; paramCount: number }) => {
             if (paramCount <= 1) {
                 return `export const ${name} = createAction(
   '[${capitalize(definition.name)}] ${name}'

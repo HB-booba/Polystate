@@ -57,7 +57,7 @@ ${generateReducers(definition).split('\n').join('\n')}
 
 export const {
 ${extractActions(definition)
-      .map(({ name }) => `  ${name},`)
+      .map(({ name }: { name: string }) => `  ${name},`)
       .join('\n')}
 } = ${name}Slice.actions;
 
@@ -141,7 +141,7 @@ import { useMemo, useCallback } from 'react';
 import type { RootState, AppDispatch } from './store';
 import {
 ${extractActions(definition)
-      .map(({ name }) => `  ${name},`)
+      .map(({ name }: { name: string }) => `  ${name},`)
       .join('\n')}
 } from './store';
 
