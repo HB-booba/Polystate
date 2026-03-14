@@ -259,8 +259,18 @@ export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolea
 
                 return source.subscribe({
                     next(value: T) {
-                        if (!initialized || !compare(prev, value)) {
+                        if (!initialized) {
                             initialized = true;
+                            prev = value;
+                            // Without a custom compareFn, always emit the first value.
+                            // With a custom compareFn, the first value seeds `prev` so the
+                            // comparator has a baseline — but it is not forwarded to the listener.
+                            if (!compareFn) {
+                                nextFn(value);
+                            }
+                            return;
+                        }
+                        if (!compare(prev, value)) {
                             prev = value;
                             nextFn(value);
                         }
