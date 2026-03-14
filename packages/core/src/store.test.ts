@@ -57,74 +57,61 @@ describe('Store', () => {
         expect(store.getState()).toEqual({ count: 10, name: 'Updated' });
     });
 
-    it('should notify global subscribers', (done) => {
+    it('should notify global subscribers', async () => {
         const listener = vi.fn();
         store.subscribe(listener);
 
-        store.dispatch('increment').then(() => {
-            expect(listener).toHaveBeenCalledWith({ count: 1, name: 'Test' });
-            done();
-        });
+        await store.dispatch('increment');
+        expect(listener).toHaveBeenCalledWith({ count: 1, name: 'Test' });
     });
 
-    it('should support selective subscription', (done) => {
+    it('should support selective subscription', async () => {
         const listener = vi.fn();
         store.subscribe((state) => state.count, listener);
 
-        store.dispatch('increment').then(() => {
-            expect(listener).toHaveBeenCalledWith(1);
-            done();
-        });
+        await store.dispatch('increment');
+        expect(listener).toHaveBeenCalledWith(1);
     });
 
-    it('should not notify selective subscribers if value did not change', (done) => {
+    it('should not notify selective subscribers if value did not change', async () => {
         const listener = vi.fn();
         store.subscribe((state) => state.name, listener);
 
-        store.dispatch('increment').then(() => {
-            expect(listener).not.toHaveBeenCalled();
-            done();
-        });
+        await store.dispatch('increment');
+        expect(listener).not.toHaveBeenCalled();
     });
 
-    it('should unsubscribe correctly', (done) => {
+    it('should unsubscribe correctly', async () => {
         const listener = vi.fn();
         const unsubscribe = store.subscribe(listener);
 
-        store.dispatch('increment').then(() => {
-            expect(listener).toHaveBeenCalledTimes(1);
+        await store.dispatch('increment');
+        expect(listener).toHaveBeenCalledTimes(1);
 
-            unsubscribe();
-            return store.dispatch('increment');
-        }).then(() => {
-            expect(listener).toHaveBeenCalledTimes(1);
-            done();
-        });
+        unsubscribe();
+        await store.dispatch('increment');
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 
-    it('should support thunk actions', (done) => {
-        store.dispatch(async (dispatch, getState) => {
+    it('should support thunk actions', async () => {
+        await store.dispatch(async (dispatch, getState) => {
             await new Promise((resolve) => setTimeout(resolve, 10));
             const state = getState();
             expect(state.count).toBe(0);
             dispatch('increment');
-        }).then(() => {
-            expect(store.getState().count).toBe(1);
-            done();
         });
+        expect(store.getState().count).toBe(1);
     });
 
-    it('should warn if action not found', (done) => {
+    it('should warn if action not found', async () => {
         const warnSpy = vi.spyOn(console, 'warn');
 
-        store.dispatch('nonexistent').then(() => {
-            expect(warnSpy).toHaveBeenCalledWith('No action handler found for "nonexistent"');
-            warnSpy.mockRestore();
-            done();
-        });
+        await store.dispatch('nonexistent');
+        expect(warnSpy).toHaveBeenCalledWith('No action handler found for "nonexistent"');
+        warnSpy.mockRestore();
     });
 
-    it('should run middleware', (done) => {
+    it('should run middleware', async () => {
         const middlewareFn = vi.fn();
         const storeWithMiddleware = createStore<TestState>(
             { count: 0, name: 'Test' },
@@ -136,33 +123,29 @@ describe('Store', () => {
             }
         );
 
-        storeWithMiddleware.dispatch('increment').then(() => {
-            expect(middlewareFn).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    action: 'increment',
-                    prevState: { count: 0, name: 'Test' },
-                    nextState: { count: 1, name: 'Test' },
-                })
-            );
-            done();
-        });
+        await storeWithMiddleware.dispatch('increment');
+        expect(middlewareFn).toHaveBeenCalledWith(
+            expect.objectContaining({
+                action: 'increment',
+                prevState: { count: 0, name: 'Test' },
+                nextState: { count: 1, name: 'Test' },
+            })
+        );
     });
 
-    it('should support multiple subscribers', (done) => {
+    it('should support multiple subscribers', async () => {
         const listener1 = vi.fn();
         const listener2 = vi.fn();
 
         store.subscribe(listener1);
         store.subscribe(listener2);
 
-        store.dispatch('increment').then(() => {
-            expect(listener1).toHaveBeenCalled();
-            expect(listener2).toHaveBeenCalled();
-            done();
-        });
+        await store.dispatch('increment');
+        expect(listener1).toHaveBeenCalled();
+        expect(listener2).toHaveBeenCalled();
     });
 
-    it('should support complex nested state', (done) => {
+    it('should support complex nested state', async () => {
         interface ComplexState {
             user: {
                 name: string;
@@ -198,9 +181,7 @@ describe('Store', () => {
         const listener = vi.fn();
         complexStore.subscribe((state) => state.user.profile.age, listener);
 
-        complexStore.dispatch('updateAge', 31).then(() => {
-            expect(listener).toHaveBeenCalledWith(31);
-            done();
-        });
+        await complexStore.dispatch('updateAge', 31);
+        expect(listener).toHaveBeenCalledWith(31);
     });
 });
