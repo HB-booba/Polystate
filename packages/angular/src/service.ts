@@ -1,8 +1,8 @@
-import { effect, Injectable, signal } from '@angular/core';
+import { effect, Injectable, OnDestroy, signal } from '@angular/core';
 import type { Selector, Store } from '@polystate/core';
 import { asObservable, createStore } from '@polystate/core';
-import { BehaviorSubject } from 'rxjs';
-import { distinctUntilChanged } from 'rxjs/operators';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 /**
  * Abstract base class for Angular services that manage Polystate stores.
@@ -27,8 +27,15 @@ import { distinctUntilChanged } from 'rxjs/operators';
  * ```
  */
 @Injectable()
-export abstract class PolystateService<T> {
+export abstract class PolystateService<T> implements OnDestroy {
     protected store!: Store<T>;
+
+    private readonly destroy$ = new Subject<void>();
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
 
     /**
      * Selects a slice of state as an Angular Signal.
@@ -88,14 +95,14 @@ export abstract class PolystateService<T> {
         const observable = asObservable(this.store, selector);
         const subject = new BehaviorSubject(this.store.getState(selector));
 
-        const subscription = observable.subscribe((value) => {
+        observable.subscribe((value) => {
             subject.next(value);
         });
 
-        // Note: In a real implementation, you'd handle subscription cleanup
-        // This is a simplified version
-
-        return subject.asObservable().pipe(distinctUntilChanged());
+        return subject.asObservable().pipe(
+            distinctUntilChanged(),
+            takeUntil(this.destroy$)
+        );
     }
 
     /**
