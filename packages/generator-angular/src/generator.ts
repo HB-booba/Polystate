@@ -172,14 +172,20 @@ function capitalize(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function getTypeFromValue(value: any): string {
+function getTypeFromValue(value: any, depth = 0): string {
     if (value === null || value === undefined) return 'any';
     if (Array.isArray(value)) {
-        if (value.length === 0) return 'any[]';
-        return `Array<${getTypeFromValue(value[0])}>`;
+        if (value.length === 0) return 'any[]'; // provide explicit element type via TypeScript generics at the definition
+        return `Array<${getTypeFromValue(value[0], depth)}>`;
     }
     if (typeof value === 'object') {
-        return 'Record<string, any>';
+        if (depth > 3) return 'Record<string, any>';
+        const entries = Object.entries(value);
+        if (entries.length === 0) return 'Record<string, any>';
+        const props = entries
+            .map(([k, v]) => `${k}: ${getTypeFromValue(v, depth + 1)}`)
+            .join('; ');
+        return `{ ${props} }`;
     }
     return typeof value;
 }
