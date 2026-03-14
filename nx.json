@@ -1,0 +1,42 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "extends": "nx/presets/npm.json",
+  "npmScope": "polystate",
+  "sourceRoot": "packages",
+  "defaultBase": "main",
+  "defaultRelease": {
+    "releaseTags": {
+      "includeSourceCommit": false
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/js/core",
+      "options": {
+        "targetDefaults": {
+          "@nx/js:tsc": {
+            "cacheableOutputs": [
+              "{projectRoot}/dist"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "test": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    },
+    "lint": {
+      "cache": true
+    }
+  }
+}

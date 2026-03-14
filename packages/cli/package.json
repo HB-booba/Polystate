@@ -1,0 +1,46 @@
+{
+  "name": "@polystate/cli",
+  "version": "0.1.0",
+  "description": "CLI tool for Polystate code generation",
+  "main": "./dist/index.js",
+  "bin": {
+    "polystate": "./dist/cli.js"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/cli.ts --format cjs,esm --shebang && tsup src/index.ts",
+    "test": "vitest",
+    "dev": "tsup --watch"
+  },
+  "keywords": [
+    "polystate",
+    "code-generation",
+    "cli",
+    "react",
+    "angular"
+  ],
+  "author": "Polystate Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@polystate/definition": "workspace:*",
+    "@polystate/generator-react": "workspace:*",
+    "@polystate/generator-angular": "workspace:*",
+    "commander": "^11.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "tsup": "^8.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

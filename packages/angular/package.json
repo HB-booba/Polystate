@@ -1,0 +1,58 @@
+{
+  "name": "@polystate/angular",
+  "version": "0.1.0",
+  "description": "Angular 17+ services for Polystate state management",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap --external @angular/core,rxjs",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "lint": "eslint src",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "angular",
+    "state-management",
+    "polystate",
+    "services",
+    "signals",
+    "observables"
+  ],
+  "author": "Polystate Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@polystate/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@angular/core": ">=17.0.0",
+    "rxjs": ">=7.0.0"
+  },
+  "devDependencies": {
+    "@angular/core": "^17.0.0",
+    "@angular/common": "^17.0.0",
+    "@angular/platform-browser": "^17.0.0",
+    "@angular/platform-browser-dynamic": "^17.0.0",
+    "rxjs": "^7.8.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3",
+    "tsup": "^8.0.2",
+    "vitest": "^1.1.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0"
+  }
+}

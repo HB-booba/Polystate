@@ -1,0 +1,38 @@
+{
+  "name": "@polystate/generator-react",
+  "version": "0.1.0",
+  "description": "React Redux code generator for Polystate store definitions",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest",
+    "dev": "tsup --watch"
+  },
+  "keywords": [
+    "polystate",
+    "code-generation",
+    "react",
+    "redux"
+  ],
+  "author": "Polystate Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@polystate/definition": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "tsup": "^8.0.0"
+  }
+}
