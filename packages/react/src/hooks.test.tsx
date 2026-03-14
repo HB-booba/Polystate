@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React, { createElement: h } from 'react';
+import React, { createElement as h } from 'react';
 import { createStore } from '@polystate/core';
 import {
   useStore,

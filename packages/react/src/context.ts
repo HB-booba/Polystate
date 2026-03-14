@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import { createContext, useContext, ReactNode } from 'react';
 import type { Store } from '@polystate/core';
 
@@ -33,11 +34,7 @@ export function createStoreContext<T>(store: Store<T>) {
      * Provider component that wraps store in context.
      */
     function Provider({ children }: { children: ReactNode }) {
-        return (
-            <StoreContext.Provider value= { store } >
-            { children }
-            </StoreContext.Provider>
-    );
+        return createElement(StoreContext.Provider, { value: store }, children);
     }
 
     /**
