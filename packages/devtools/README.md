@@ -25,7 +25,7 @@ You also need the [Redux DevTools Extension](https://github.com/reduxjs/redux-de
 import { createStore } from '@polystate/core';
 import { createDevToolsMiddleware } from '@polystate/devtools';
 
-// Create store with DevTools
+// Create store first (needed so DevTools can call store.setState for time-travel)
 const store = createStore(
   { count: 0 },
   {
@@ -33,7 +33,7 @@ const store = createStore(
   },
   {
     middleware: [
-      createDevToolsMiddleware({
+      createDevToolsMiddleware(store, {
         name: 'CounterStore',
         timeTravel: true,
         maxAge: 50,
@@ -42,7 +42,7 @@ const store = createStore(
   }
 );
 
-// Now open Redux DevTools to inspect!
+// Now open Redux DevTools to inspect and time-travel!
 ```
 
 ## Configuration

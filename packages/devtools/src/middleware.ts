@@ -1,4 +1,4 @@
-import type { Middleware, MiddlewareContext } from '@polystate/core';
+import type { Middleware, MiddlewareContext, Store } from '@polystate/core';
 
 /**
  * Redux DevTools Extension interface.
@@ -38,13 +38,15 @@ export interface DevToolsConfig {
  * ```typescript
  * import { createStore } from '@polystate/core';
  * import { createDevToolsMiddleware } from '@polystate/devtools';
- * 
+ *
+ * const store = createStore(initialState, actions);
+ *
  * const store = createStore(
  *   initialState,
  *   actions,
  *   {
  *     middleware: [
- *       createDevToolsMiddleware({
+ *       createDevToolsMiddleware(store, {
  *         name: 'MyStore',
  *         timeTravel: true,
  *         maxAge: 50
@@ -52,7 +54,7 @@ export interface DevToolsConfig {
  *     ]
  *   }
  * );
- * 
+ *
  * // Now you can:
  * // 1. Inspect actions in Redux DevTools
  * // 2. Time-travel between states
@@ -60,7 +62,8 @@ export interface DevToolsConfig {
  * // 4. Dispatch actions from DevTools
  * ```
  */
-export function createDevToolsMiddleware<T = any>(
+export function createDevToolsMiddleware<T>(
+    store: Store<T>,
     config: DevToolsConfig = {}
 ): Middleware<T> {
     const { name = 'Polystate Store', timeTravel = true, maxAge = 50 } = config;
@@ -104,20 +107,27 @@ export function createDevToolsMiddleware<T = any>(
 
         // Subscribe to DevTools messages for time-travel
         if (timeTravel && actionIndex === 1) {
-            const unsubscribe = devtools.subscribe?.((message: any) => {
-                if (
-                    message.type === 'DISPATCH' &&
-                    (message.payload.type === 'JUMP_TO_ACTION' ||
-                        message.payload.type === 'JUMP_TO_STATE')
-                ) {
-                    // Time-travel is requested
-                    // The actual state reset would be handled by the store
+            devtools.subscribe?.((message: any) => {
+                if (message.type !== 'DISPATCH') return;
+
+                const payloadType: string = message.payload?.type;
+
+                if (payloadType === 'JUMP_TO_STATE') {
+                    try {
+                        const targetState: T = JSON.parse(message.state);
+                        store.setState(targetState);
+                    } catch (e) {
+                        console.error('[Polystate DevTools] Failed to parse JUMP_TO_STATE', e);
+                    }
+                } else if (payloadType === 'JUMP_TO_ACTION') {
+                    const targetIndex = message.payload.actionId as number;
+                    const record = actionHistory.find((_, i) => i === targetIndex - 1) ??
+                        actionHistory[actionHistory.length - 1];
+                    if (record) {
+                        store.setState(record.state);
+                    }
                 }
             });
-
-            if (unsubscribe) {
-                // Store for cleanup if needed
-            }
         }
     };
 }

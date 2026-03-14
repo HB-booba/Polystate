@@ -137,16 +137,21 @@ export function loadPersistedState<T>(
 
 /**
  * DevTools middleware - integrates with Redux DevTools Extension.
- * Enables time-travel debugging and action inspection.
- * 
+ * Enables basic action inspection without time-travel.
+ *
+ * @deprecated Use `createDevToolsMiddleware(store, config)` from `@polystate/devtools`
+ * instead — it supports full time-travel debugging via `store.setState()`.
+ *
  * @template T - The store state type
  * @param name - Store name in DevTools
  * @returns DevTools middleware
- * 
+ *
  * @example
  * ```typescript
+ * // Preferred:
+ * import { createDevToolsMiddleware } from '@polystate/devtools';
  * const store = createStore(state, actions, {
- *   middleware: [devToolsMiddleware('TodoStore')]
+ *   middleware: [createDevToolsMiddleware(store, { name: 'TodoStore' })]
  * });
  * ```
  */
