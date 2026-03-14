@@ -1,6 +1,6 @@
 import { effect, Injectable, signal } from '@angular/core';
 import type { Selector, Store } from '@polystate/core';
-import { asObservable } from '@polystate/core';
+import { asObservable, createStore } from '@polystate/core';
 import { BehaviorSubject } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 
@@ -181,13 +181,7 @@ export function createAngularService<T>(
     return class extends PolystateService<T> {
         constructor() {
             super();
-            // Import Store from @polystate/core dynamically to avoid circular deps
-            // We need to do this inside the class to have access to the Store type
-        }
-
-        private initializeStore() {
-            // This will be overridden in the actual service implementation
-            // For now, this is a base implementation
+            this.store = createStore(initialState, actions);
         }
     };
 }
