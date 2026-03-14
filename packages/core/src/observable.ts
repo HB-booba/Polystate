@@ -171,16 +171,21 @@ export function pipe<T, R>(
 export function map<T, R>(mapFn: (value: T) => R) {
     return (source: Observable<T>): Observable<R> => {
         const obs: Observable<R> = {
-            subscribe(observer: any) {
+            subscribe(observerOrNext: any) {
+                const nextFn = typeof observerOrNext === 'function'
+                    ? observerOrNext
+                    : (v: any) => (observerOrNext as Observer<any>).next?.(v);
+                const errorFn = typeof observerOrNext === 'object' ? observerOrNext?.error?.bind(observerOrNext) : undefined;
+                const completeFn = typeof observerOrNext === 'object' ? observerOrNext?.complete?.bind(observerOrNext) : undefined;
                 return source.subscribe({
                     next(value: T) {
-                        (observer as Observer<R>).next?.(mapFn(value));
+                        nextFn(mapFn(value));
                     },
                     error(err: any) {
-                        (observer as Observer<R>).error?.(err);
+                        errorFn?.(err);
                     },
                     complete() {
-                        (observer as Observer<R>).complete?.();
+                        completeFn?.();
                     },
                 });
             },
@@ -203,18 +208,23 @@ export function map<T, R>(mapFn: (value: T) => R) {
 export function filter<T>(predicate: (value: T) => boolean) {
     return (source: Observable<T>): Observable<T> => {
         const obs: Observable<T> = {
-            subscribe(observer: any) {
+            subscribe(observerOrNext: any) {
+                const nextFn = typeof observerOrNext === 'function'
+                    ? observerOrNext
+                    : (v: any) => (observerOrNext as Observer<any>).next?.(v);
+                const errorFn = typeof observerOrNext === 'object' ? observerOrNext?.error?.bind(observerOrNext) : undefined;
+                const completeFn = typeof observerOrNext === 'object' ? observerOrNext?.complete?.bind(observerOrNext) : undefined;
                 return source.subscribe({
                     next(value: T) {
                         if (predicate(value)) {
-                            (observer as Observer<T>).next?.(value);
+                            nextFn(value);
                         }
                     },
                     error(err: any) {
-                        (observer as Observer<T>).error?.(err);
+                        errorFn?.(err);
                     },
                     complete() {
-                        (observer as Observer<T>).complete?.();
+                        completeFn?.();
                     },
                 });
             },
@@ -238,7 +248,12 @@ export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolea
     return (source: Observable<T>): Observable<T> => {
         const compare = compareFn ?? ((a: T, b: T) => a === b);
         const obs: Observable<T> = {
-            subscribe(observer: any) {
+            subscribe(observerOrNext: any) {
+                const nextFn = typeof observerOrNext === 'function'
+                    ? observerOrNext
+                    : (v: any) => (observerOrNext as Observer<any>).next?.(v);
+                const errorFn = typeof observerOrNext === 'object' ? observerOrNext?.error?.bind(observerOrNext) : undefined;
+                const completeFn = typeof observerOrNext === 'object' ? observerOrNext?.complete?.bind(observerOrNext) : undefined;
                 let prev: T;
                 let initialized = false;
 
@@ -247,14 +262,14 @@ export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolea
                         if (!initialized || !compare(prev, value)) {
                             initialized = true;
                             prev = value;
-                            (observer as Observer<T>).next?.(value);
+                            nextFn(value);
                         }
                     },
                     error(err: any) {
-                        (observer as Observer<T>).error?.(err);
+                        errorFn?.(err);
                     },
                     complete() {
-                        (observer as Observer<T>).complete?.();
+                        completeFn?.();
                     },
                 });
             },
@@ -277,24 +292,29 @@ export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolea
 export function take<T>(count: number) {
     return (source: Observable<T>): Observable<T> => {
         const obs: Observable<T> = {
-            subscribe(observer: any) {
+            subscribe(observerOrNext: any) {
+                const nextFn = typeof observerOrNext === 'function'
+                    ? observerOrNext
+                    : (v: any) => (observerOrNext as Observer<any>).next?.(v);
+                const errorFn = typeof observerOrNext === 'object' ? observerOrNext?.error?.bind(observerOrNext) : undefined;
+                const completeFn = typeof observerOrNext === 'object' ? observerOrNext?.complete?.bind(observerOrNext) : undefined;
                 let emitted = 0;
                 const subscription = source.subscribe({
                     next(value: T) {
                         if (emitted < count) {
-                            (observer as Observer<T>).next?.(value);
+                            nextFn(value);
                             emitted++;
                             if (emitted === count) {
-                                (observer as Observer<T>).complete?.();
+                                completeFn?.();
                                 subscription.unsubscribe();
                             }
                         }
                     },
                     error(err: any) {
-                        (observer as Observer<T>).error?.(err);
+                        errorFn?.(err);
                     },
                     complete() {
-                        (observer as Observer<T>).complete?.();
+                        completeFn?.();
                     },
                 });
                 return subscription;
