@@ -45,7 +45,7 @@ export function useStore<T>(store: Store<T>): T {
  */
 export function useSelector<T, S>(store: Store<T>, selector: Selector<T, S>): S {
     return useSyncExternalStore(
-        (listener) => store.subscribe(selector, listener),
+        (listener) => store.subscribe(selector, () => listener()),
         () => store.getState(selector),
         () => store.getState(selector)
     );

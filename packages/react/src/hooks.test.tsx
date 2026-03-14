@@ -101,6 +101,33 @@ describe('React Hooks', () => {
         // Expected to timeout since no re-render should happen
       });
     });
+
+    it('should not re-render when unrelated state changes, only when selected slice changes', async () => {
+      let renderCount = 0;
+
+      function TestComponent() {
+        const count = useSelector(store, (state) => state.count);
+        renderCount++;
+        return h('div', null, `Count: ${count}`);
+      }
+
+      render(h(TestComponent));
+      const afterMount = renderCount;
+
+      // Change name several times — count selector must not trigger re-renders
+      await store.dispatch('setName', 'A');
+      await store.dispatch('setName', 'B');
+      await store.dispatch('setName', 'C');
+
+      // Change count once — should trigger exactly one re-render
+      await store.dispatch('increment');
+
+      await waitFor(() => {
+        expect(screen.getByText('Count: 1')).toBeInTheDocument();
+      });
+
+      expect(renderCount).toBe(afterMount + 1);
+    });
   });
 
   describe('useDispatch', () => {
