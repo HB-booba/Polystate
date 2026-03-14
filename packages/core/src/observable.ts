@@ -202,14 +202,17 @@ export function filter<T>(predicate: (value: T) => boolean) {
  */
 export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolean) {
     return (observable: Observable<T>): Observable<T> => {
-        let prev: T | symbol = Symbol('initial');
-        const compare = compareFn ?? ((a, b) => a === b);
+        const compare = compareFn ?? ((a: T, b: T) => a === b);
 
         return {
             subscribe(observer) {
+                let prev: T;
+                let initialized = false;
+
                 return observable.subscribe({
                     next(value) {
-                        if (prev === Symbol('initial') || !compare(prev as T, value)) {
+                        if (!initialized || !compare(prev, value)) {
+                            initialized = true;
                             prev = value;
                             observer.next?.(value);
                         }
