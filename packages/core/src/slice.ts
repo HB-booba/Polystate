@@ -94,16 +94,19 @@ export function createSlice<T>(
  * };
  * 
  * const prefixed = prefixActions(counterActions, 'counter');
- * // Result: { 'counter/increment': ... }
+ * // Result: { 'counter/increment': (fullState, payload) => ({ ...fullState, counter: handler(fullState.counter, payload) }) }
  * ```
  */
-export function prefixActions<T>(
-    actions: ActionMap<T>,
+export function prefixActions<TSlice, TFull extends Record<string, any> = Record<string, any>>(
+    actions: ActionMap<TSlice>,
     prefix: string
-): ActionMap<T> {
-    const result: ActionMap<T> = {};
+): ActionMap<TFull> {
+    const result: ActionMap<TFull> = {};
     Object.entries(actions).forEach(([name, handler]) => {
-        result[`${prefix}/${name}`] = handler;
+        result[`${prefix}/${name}`] = (fullState: TFull, payload) => ({
+            ...fullState,
+            [prefix]: handler((fullState as any)[prefix], payload),
+        });
     });
     return result;
 }

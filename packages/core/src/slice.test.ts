@@ -124,4 +124,30 @@ describe('Slices', () => {
         await store.dispatch('user/setAge', 25);
         expect(store.getState().user.age).toBe(25);
     });
+
+    it('prefixActions scopes handler to sub-state — dispatch must not produce NaN or wrong key', async () => {
+        const counterSlice = createSlice(
+            { count: 0 },
+            {
+                increment: (state) => ({ ...state, count: state.count + 1 }),
+                add: (state, n: number) => ({ ...state, count: state.count + n }),
+            }
+        );
+
+        const store = createStore(
+            { counter: counterSlice.initialState, other: 'unchanged' },
+            prefixActions(counterSlice.actions, 'counter')
+        );
+
+        await store.dispatch('counter/increment');
+        // count must be 1, not 0 or NaN
+        expect(store.getState().counter.count).toBe(1);
+        // unrelated key must be untouched
+        expect(store.getState().other).toBe('unchanged');
+        // no spurious top-level 'count' key
+        expect((store.getState() as any).count).toBeUndefined();
+
+        await store.dispatch('counter/add', 10);
+        expect(store.getState().counter.count).toBe(11);
+    });
 });
