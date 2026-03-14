@@ -6,17 +6,17 @@
 import { StoreDefinition, extractActions } from '@polystate/definition';
 
 interface GeneratorOptions {
-    overwrite?: boolean;
+  overwrite?: boolean;
 }
 
 /**
  * Generates Redux store code from a store definition
  */
 export function generateReduxStore(definition: StoreDefinition): string {
-    const { name, initialState } = definition;
-    const storeName = capitalize(name);
+  const { name, initialState } = definition;
+  const storeName = capitalize(name);
 
-    return `/**
+  return `/**
  * Generated Redux store for ${name}
  * Do not edit manually - regenerate with: polystate generate
  */
@@ -30,11 +30,11 @@ import { createSelector } from 'reselect';
 
 export interface ${storeName}State {
 ${Object.entries(initialState)
-            .map(
-                ([key, value]) =>
-                    `  ${key}: ${getTypeFromValue(value)};`
-            )
-            .join('\n')}
+      .map(
+        ([key, value]) =>
+          `  ${key}: ${getTypeFromValue(value)};`
+      )
+      .join('\n')}
 }
 
 // ============================================================================
@@ -57,8 +57,8 @@ ${generateReducers(definition).split('\n').join('\n')}
 
 export const {
 ${extractActions(definition)
-            .map(({ name }) => `  ${name},`)
-            .join('\n')}
+      .map(({ name }) => `  ${name},`)
+      .join('\n')}
 } = ${name}Slice.actions;
 
 // ============================================================================
@@ -128,10 +128,10 @@ if (persistedState) {
  * Generates hooks for component usage
  */
 export function generateHooks(definition: StoreDefinition): string {
-    const { name } = definition;
-    const storeName = capitalize(name);
+  const { name } = definition;
+  const storeName = capitalize(name);
 
-    return `/**
+  return `/**
  * Generated React hooks for ${name} store
  * Do not edit manually - regenerate with: polystate generate
  */
@@ -141,8 +141,8 @@ import { useMemo, useCallback } from 'react';
 import type { RootState, AppDispatch } from './store';
 import {
 ${extractActions(definition)
-            .map(({ name }) => `  ${name},`)
-            .join('\n')}
+      .map(({ name }) => `  ${name},`)
+      .join('\n')}
 } from './store';
 
 // ============================================================================
@@ -193,21 +193,21 @@ ${generateSelectorHooks(definition)}
  * Generates types file
  */
 export function generateTypes(definition: StoreDefinition): string {
-    const { name } = definition;
-    const storeName = capitalize(name);
+  const { name } = definition;
+  const storeName = capitalize(name);
 
-    return `/**
+  return `/**
  * Generated types for ${name} store
  * Do not edit manually - regenerate with: polystate generate
  */
 
 export interface ${storeName}State {
 ${Object.entries(definition.initialState)
-            .map(
-                ([key, value]) =>
-                    `  ${key}: ${getTypeFromValue(value)};`
-            )
-            .join('\n')}
+      .map(
+        ([key, value]) =>
+          `  ${key}: ${getTypeFromValue(value)};`
+      )
+      .join('\n')}
 }
 
 export interface ${storeName}Actions {
@@ -221,309 +221,309 @@ ${generateActionTypes(definition).split('\n').join('\n')}
 // ============================================================================
 
 function capitalize(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1);
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function getTypeFromValue(value: any): string {
-    if (value === null || value === undefined) return 'any';
-    if (Array.isArray(value)) {
-        if (value.length === 0) return 'any[]';
-        return `Array<${getTypeFromValue(value[0])}>`;
-    }
-    if (typeof value === 'object') {
-        return 'Record<string, any>';
-    }
-    return typeof value;
+  if (value === null || value === undefined) return 'any';
+  if (Array.isArray(value)) {
+    if (value.length === 0) return 'any[]';
+    return `Array<${getTypeFromValue(value[0])}>`;
+  }
+  if (typeof value === 'object') {
+    return 'Record<string, any>';
+  }
+  return typeof value;
 }
 
 function generateReducers(definition: StoreDefinition): string {
-    return extractActions(definition)
-        .map(({ name: actionName, handler, paramCount }: { name: string; handler: (...args: unknown[]) => unknown; paramCount: number }) =>
-            serializeActionToReducer(
-                actionName,
-                handler as (...args: unknown[]) => unknown,
-                paramCount
-            )
-        )
-        .join('\n');
+  return extractActions(definition)
+    .map(({ name: actionName, handler, paramCount }: { name: string; handler: (...args: unknown[]) => unknown; paramCount: number }) =>
+      serializeActionToReducer(
+        actionName,
+        handler as (...args: unknown[]) => unknown,
+        paramCount
+      )
+    )
+    .join('\n');
 }
 
 function serializeActionToReducer(
-    actionName: string,
-    handler: (...args: unknown[]) => unknown,
-    paramCount: number
+  actionName: string,
+  handler: (...args: unknown[]) => unknown,
+  paramCount: number
 ): string {
-    const hasPayload = paramCount > 1;
-    const src = handler.toString();
-    const payloadParamName = hasPayload ? extractPayloadParamName(src) : null;
-    const immerMutations = tryConvertHandlerToImmer(src, payloadParamName);
+  const hasPayload = paramCount > 1;
+  const src = handler.toString();
+  const payloadParamName = hasPayload ? extractPayloadParamName(src) : null;
+  const immerMutations = tryConvertHandlerToImmer(src, payloadParamName);
 
-    if (immerMutations) {
-        if (hasPayload) {
-            return `    ${actionName}: (state, action: PayloadAction<any>) => {\n${immerMutations}\n    },`;
-        }
-        return `    ${actionName}: (state) => {\n${immerMutations}\n    },`;
-    }
-
-    // Fallback: inline the handler source and spread result onto state
+  if (immerMutations) {
     if (hasPayload) {
-        return `    ${actionName}: (state, action: PayloadAction<any>) => {\n      return { ...state, ...(${src})(state, action.payload) };\n    },`;
+      return `    ${actionName}: (state, action: PayloadAction<any>) => {\n${immerMutations}\n    },`;
     }
-    return `    ${actionName}: (state) => {\n      return { ...state, ...(${src})(state) };\n    },`;
+    return `    ${actionName}: (state) => {\n${immerMutations}\n    },`;
+  }
+
+  // Fallback: inline the handler source and spread result onto state
+  if (hasPayload) {
+    return `    ${actionName}: (state, action: PayloadAction<any>) => {\n      return { ...state, ...(${src})(state, action.payload) };\n    },`;
+  }
+  return `    ${actionName}: (state) => {\n      return { ...state, ...(${src})(state) };\n    },`;
 }
 
 function extractPayloadParamName(src: string): string {
-    // Works with both compiled JS (no type annotations) and raw TS source
-    const match = src.match(
-        /^\s*(?:function\s*\w*\s*)?\(\s*[a-zA-Z_$][a-zA-Z0-9_$]*\s*,\s*([a-zA-Z_$][a-zA-Z0-9_$]*)/
-    );
-    return match?.[1] ?? 'payload';
+  // Works with both compiled JS (no type annotations) and raw TS source
+  const match = src.match(
+    /^\s*(?:function\s*\w*\s*)?\(\s*[a-zA-Z_$][a-zA-Z0-9_$]*\s*,\s*([a-zA-Z_$][a-zA-Z0-9_$]*)/
+  );
+  return match?.[1] ?? 'payload';
 }
 
 function tryConvertHandlerToImmer(
-    src: string,
-    payloadParamName: string | null
+  src: string,
+  payloadParamName: string | null
 ): string | null {
-    const objContent = extractReturnObjectContent(src);
-    if (!objContent) return null;
+  const objContent = extractReturnObjectContent(src);
+  if (!objContent) return null;
 
-    const trimmed = objContent.trimStart();
-    if (!trimmed.startsWith('...state')) return null;
+  const trimmed = objContent.trimStart();
+  if (!trimmed.startsWith('...state')) return null;
 
-    // Remove the leading ...state spread
-    const propsContent = trimmed.replace(/^\.\.\.\s*state\s*,\s*/, '').trim();
-    if (!propsContent) return null;
+  // Remove the leading ...state spread
+  const propsContent = trimmed.replace(/^\.\.\.\s*state\s*,\s*/, '').trim();
+  if (!propsContent) return null;
 
-    const props = extractObjectProperties(propsContent);
-    if (!props || props.length === 0) return null;
+  const props = extractObjectProperties(propsContent);
+  if (!props || props.length === 0) return null;
 
-    const lines: string[] = [];
-    for (const { key, value } of props) {
-        const mutation = convertPropertyToImmerMutation(key, value, payloadParamName);
-        if (mutation === null) return null; // ambiguous → fall back
-        lines.push(mutation);
-    }
-    return lines.join('\n');
+  const lines: string[] = [];
+  for (const { key, value } of props) {
+    const mutation = convertPropertyToImmerMutation(key, value, payloadParamName);
+    if (mutation === null) return null; // ambiguous → fall back
+    lines.push(mutation);
+  }
+  return lines.join('\n');
 }
 
 function convertPropertyToImmerMutation(
-    key: string,
-    rawValue: string,
-    payloadParamName: string | null
+  key: string,
+  rawValue: string,
+  payloadParamName: string | null
 ): string | null {
-    let value = payloadParamName
-        ? replacePayloadParam(rawValue, payloadParamName)
-        : rawValue;
-    value = value.trim();
+  let value = payloadParamName
+    ? replacePayloadParam(rawValue, payloadParamName)
+    : rawValue;
+  value = value.trim();
 
-    // Push pattern: [...state.key, item]
-    const pushMatch = value.match(
-        /^\[\s*\.\.\.\s*state\.[a-zA-Z_$][a-zA-Z0-9_$]*\s*,\s*([\s\S]+)\]\s*$/
-    );
-    if (pushMatch) {
-        const item = pushMatch[1]!.trim().replace(/,\s*$/, '');
-        return `      state.${key}.push(${item});`;
-    }
+  // Push pattern: [...state.key, item]
+  const pushMatch = value.match(
+    /^\[\s*\.\.\.\s*state\.[a-zA-Z_$][a-zA-Z0-9_$]*\s*,\s*([\s\S]+)\]\s*$/
+  );
+  if (pushMatch) {
+    const item = pushMatch[1]!.trim().replace(/,\s*$/, '');
+    return `      state.${key}.push(${item});`;
+  }
 
-    // Map pattern → ambiguous Immer conversion, fall back
-    if (/^state\.[a-zA-Z_$][a-zA-Z0-9_$]*\.map\(/.test(value)) {
-        return null;
-    }
+  // Map pattern → ambiguous Immer conversion, fall back
+  if (/^state\.[a-zA-Z_$][a-zA-Z0-9_$]*\.map\(/.test(value)) {
+    return null;
+  }
 
-    // Filter/slice/reduce or any other array method: direct assignment
-    if (/^state\.[a-zA-Z_$][a-zA-Z0-9_$]*\./.test(value)) {
-        return `      state.${key} = ${value};`;
-    }
-
-    // Simple value assignment
+  // Filter/slice/reduce or any other array method: direct assignment
+  if (/^state\.[a-zA-Z_$][a-zA-Z0-9_$]*\./.test(value)) {
     return `      state.${key} = ${value};`;
+  }
+
+  // Simple value assignment
+  return `      state.${key} = ${value};`;
 }
 
 function replacePayloadParam(src: string, paramName: string): string {
-    // Expand shorthand properties first: { paramName, } → { paramName: action.payload, }
-    const shorthandRe = new RegExp(
-        `((?:[{,][\\s\\r\\n]*))\\b(${paramName})\\b(?=[\\s\\r\\n]*[,}])`,
-        'g'
-    );
-    let result = src.replace(
-        shorthandRe,
-        (_, before, name) => `${before}${name}: action.payload`
-    );
-    // Replace all remaining standalone occurrences (negative lookbehind for ".")
-    result = result.replace(
-        new RegExp(`(?<!\\.)\\b${paramName}\\b`, 'g'),
-        'action.payload'
-    );
-    return result;
+  // Expand shorthand properties first: { paramName, } → { paramName: action.payload, }
+  const shorthandRe = new RegExp(
+    `((?:[{,][\\s\\r\\n]*))\\b(${paramName})\\b(?=[\\s\\r\\n]*[,}])`,
+    'g'
+  );
+  let result = src.replace(
+    shorthandRe,
+    (_, before, name) => `${before}${name}: action.payload`
+  );
+  // Replace all remaining standalone occurrences (negative lookbehind for ".")
+  result = result.replace(
+    new RegExp(`(?<!\\.)\\b${paramName}\\b`, 'g'),
+    'action.payload'
+  );
+  return result;
 }
 
 function extractReturnObjectContent(src: string): string | null {
-    const arrowIdx = src.indexOf('=>');
-    if (arrowIdx === -1) return null;
+  const arrowIdx = src.indexOf('=>');
+  if (arrowIdx === -1) return null;
 
-    let i = arrowIdx + 2;
-    while (i < src.length && /\s/.test(src.charAt(i))) i++;
-    if (i >= src.length) return null;
+  let i = arrowIdx + 2;
+  while (i < src.length && /\s/.test(src.charAt(i))) i++;
+  if (i >= src.length) return null;
 
-    if (src.charAt(i) === '(') {
-        // Arrow with parenthesized return: => ({ ... })
-        i++;
-        while (i < src.length && /\s/.test(src.charAt(i))) i++;
-    } else if (src.charAt(i) === '{') {
-        // Block body: => { ... return { ... }; }
-        i++;
-        const returnIdx = src.indexOf('return', i);
-        if (returnIdx === -1) return null;
-        i = returnIdx + 6;
-        while (i < src.length && /\s/.test(src.charAt(i))) i++;
-    }
-
-    if (i >= src.length || src.charAt(i) !== '{') return null;
-
-    // Extract balanced object content
-    const start = i + 1;
-    let depth = 1;
+  if (src.charAt(i) === '(') {
+    // Arrow with parenthesized return: => ({ ... })
     i++;
-    let inString = false;
-    let stringChar = '';
+    while (i < src.length && /\s/.test(src.charAt(i))) i++;
+  } else if (src.charAt(i) === '{') {
+    // Block body: => { ... return { ... }; }
+    i++;
+    const returnIdx = src.indexOf('return', i);
+    if (returnIdx === -1) return null;
+    i = returnIdx + 6;
+    while (i < src.length && /\s/.test(src.charAt(i))) i++;
+  }
 
-    while (i < src.length && depth > 0) {
-        const ch = src.charAt(i);
-        if (inString) {
-            if (ch === '\\') { i += 2; continue; }
-            if (ch === stringChar) inString = false;
-        } else {
-            if (ch === '"' || ch === "'" || ch === '`') {
-                inString = true;
-                stringChar = ch;
-            } else if (ch === '{' || ch === '(' || ch === '[') {
-                depth++;
-            } else if (ch === '}' || ch === ')' || ch === ']') {
-                depth--;
-            }
-        }
-        i++;
+  if (i >= src.length || src.charAt(i) !== '{') return null;
+
+  // Extract balanced object content
+  const start = i + 1;
+  let depth = 1;
+  i++;
+  let inString = false;
+  let stringChar = '';
+
+  while (i < src.length && depth > 0) {
+    const ch = src.charAt(i);
+    if (inString) {
+      if (ch === '\\') { i += 2; continue; }
+      if (ch === stringChar) inString = false;
+    } else {
+      if (ch === '"' || ch === "'" || ch === '`') {
+        inString = true;
+        stringChar = ch;
+      } else if (ch === '{' || ch === '(' || ch === '[') {
+        depth++;
+      } else if (ch === '}' || ch === ')' || ch === ']') {
+        depth--;
+      }
     }
+    i++;
+  }
 
-    if (depth !== 0) return null;
-    return src.slice(start, i - 1);
+  if (depth !== 0) return null;
+  return src.slice(start, i - 1);
 }
 
 function extractObjectProperties(
-    propsContent: string
+  propsContent: string
 ): Array<{ key: string; value: string }> | null {
-    const props: Array<{ key: string; value: string }> = [];
-    let i = 0;
-    const len = propsContent.length;
+  const props: Array<{ key: string; value: string }> = [];
+  let i = 0;
+  const len = propsContent.length;
 
-    while (i < len) {
-        // Skip whitespace and commas
-        while (i < len && (/\s/.test(propsContent.charAt(i)) || propsContent.charAt(i) === ',')) i++;
-        if (i >= len) break;
+  while (i < len) {
+    // Skip whitespace and commas
+    while (i < len && (/\s/.test(propsContent.charAt(i)) || propsContent.charAt(i) === ',')) i++;
+    if (i >= len) break;
 
-        const keyMatch = propsContent.slice(i).match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)/);
-        if (!keyMatch) break;
+    const keyMatch = propsContent.slice(i).match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)/);
+    if (!keyMatch) break;
 
-        const key = keyMatch[1]!;
-        i += key.length;
-        while (i < len && /\s/.test(propsContent.charAt(i))) i++;
+    const key = keyMatch[1]!;
+    i += key.length;
+    while (i < len && /\s/.test(propsContent.charAt(i))) i++;
 
-        let value: string;
+    let value: string;
 
-        if (i >= len || propsContent.charAt(i) === ',' || propsContent.charAt(i) === '}') {
-            // Shorthand property
-            value = key;
-        } else if (propsContent.charAt(i) === ':') {
-            i++; // skip ':'
-            while (i < len && /\s/.test(propsContent.charAt(i))) i++;
+    if (i >= len || propsContent.charAt(i) === ',' || propsContent.charAt(i) === '}') {
+      // Shorthand property
+      value = key;
+    } else if (propsContent.charAt(i) === ':') {
+      i++; // skip ':'
+      while (i < len && /\s/.test(propsContent.charAt(i))) i++;
 
-            const valueStart = i;
-            let depth = 0;
-            let inString = false;
-            let stringChar = '';
+      const valueStart = i;
+      let depth = 0;
+      let inString = false;
+      let stringChar = '';
 
-            while (i < len) {
-                const ch = propsContent.charAt(i);
-                if (inString) {
-                    if (ch === '\\') { i += 2; continue; }
-                    if (ch === stringChar) inString = false;
-                } else {
-                    if (ch === '"' || ch === "'" || ch === '`') {
-                        inString = true;
-                        stringChar = ch;
-                    } else if (ch === '{' || ch === '(' || ch === '[') {
-                        depth++;
-                    } else if (ch === '}' || ch === ')' || ch === ']') {
-                        if (depth === 0) break;
-                        depth--;
-                    } else if (ch === ',' && depth === 0) {
-                        break;
-                    }
-                }
-                i++;
-            }
-            value = propsContent.slice(valueStart, i).trim();
+      while (i < len) {
+        const ch = propsContent.charAt(i);
+        if (inString) {
+          if (ch === '\\') { i += 2; continue; }
+          if (ch === stringChar) inString = false;
         } else {
-            break; // unexpected character
+          if (ch === '"' || ch === "'" || ch === '`') {
+            inString = true;
+            stringChar = ch;
+          } else if (ch === '{' || ch === '(' || ch === '[') {
+            depth++;
+          } else if (ch === '}' || ch === ')' || ch === ']') {
+            if (depth === 0) break;
+            depth--;
+          } else if (ch === ',' && depth === 0) {
+            break;
+          }
         }
-
-        props.push({ key, value });
+        i++;
+      }
+      value = propsContent.slice(valueStart, i).trim();
+    } else {
+      break; // unexpected character
     }
 
-    return props.length > 0 ? props : null;
+    props.push({ key, value });
+  }
+
+  return props.length > 0 ? props : null;
 }
 
 function generateSelectors(
-    definition: StoreDefinition,
-    name: string,
-    storeName: string
+  definition: StoreDefinition,
+  name: string,
+  storeName: string
 ): string {
-    return Object.keys(definition.initialState)
-        .map((key) => {
-            const selectorName = `select${capitalize(key)}`;
-            return `export const ${selectorName} = createSelector(
+  return Object.keys(definition.initialState)
+    .map((key) => {
+      const selectorName = `select${capitalize(key)}`;
+      return `export const ${selectorName} = createSelector(
   select${storeName}State,
   (state) => state.${key}
 );`;
-        })
-        .join('\n\n');
+    })
+    .join('\n\n');
 }
 
 function generateDispatchHooks(definition: StoreDefinition): string {
-    return extractActions(definition)
-        .map(({ name, paramCount }) => {
-            if (paramCount <= 1) {
-                return `      ${name}: () => dispatch(${name}()),`;
-            } else {
-                return `      ${name}: (payload: any) => dispatch(${name}(payload)),`;
-            }
-        })
-        .join('\n');
+  return extractActions(definition)
+    .map(({ name, paramCount }) => {
+      if (paramCount <= 1) {
+        return `      ${name}: () => dispatch(${name}()),`;
+      } else {
+        return `      ${name}: (payload: any) => dispatch(${name}(payload)),`;
+      }
+    })
+    .join('\n');
 }
 
 function generateSelectorHooks(definition: StoreDefinition): string {
-    const { name } = definition;
-    const storeName = capitalize(name);
+  const { name } = definition;
+  const storeName = capitalize(name);
 
-    return Object.keys(definition.initialState)
-        .map((key) => {
-            const selectorName = `select${capitalize(key)}`;
-            const hookName = `use${capitalize(key)}`;
-            return `export function ${hookName}() {
+  return Object.keys(definition.initialState)
+    .map((key) => {
+      const selectorName = `select${capitalize(key)}`;
+      const hookName = `use${capitalize(key)}`;
+      return `export function ${hookName}() {
   return useSelector((state) => state.${name}.${key});
 }`;
-        })
-        .join('\n\n');
+    })
+    .join('\n\n');
 }
 
 function generateActionTypes(definition: StoreDefinition): string {
-    return extractActions(definition)
-        .map(({ name, paramCount }) => {
-            if (paramCount <= 1) {
-                return `  ${name}(): void;`;
-            } else {
-                return `  ${name}(payload: any): void;`;
-            }
-        })
-        .join('\n');
+  return extractActions(definition)
+    .map(({ name, paramCount }) => {
+      if (paramCount <= 1) {
+        return `  ${name}(): void;`;
+      } else {
+        return `  ${name}(payload: any): void;`;
+      }
+    })
+    .join('\n');
 }
