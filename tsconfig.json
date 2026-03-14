@@ -21,16 +21,19 @@
     "baseUrl": ".",
     "paths": {
       "@polystate/core": [
-        "packages/core/src"
+        "packages/core/dist/index"
       ],
       "@polystate/react": [
-        "packages/react/src"
+        "packages/react/dist/index"
       ],
       "@polystate/angular": [
-        "packages/angular/src"
+        "packages/angular/dist/index"
       ],
       "@polystate/devtools": [
-        "packages/devtools/src"
+        "packages/devtools/dist/index"
+      ],
+      "@polystate/definition": [
+        "packages/definition/dist/index"
       ]
     }
   },
