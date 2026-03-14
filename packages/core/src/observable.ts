@@ -15,6 +15,24 @@ export interface Observer<T> {
 export interface Observable<T> {
     subscribe(observer: Observer<T>): Subscription;
     subscribe(next: ((value: T) => void) | null, error?: (err: any) => void, complete?: () => void): Subscription;
+    pipe(): Observable<T>;
+    pipe<A>(op1: (obs: Observable<T>) => Observable<A>): Observable<A>;
+    pipe<A, B>(
+        op1: (obs: Observable<T>) => Observable<A>,
+        op2: (obs: Observable<A>) => Observable<B>
+    ): Observable<B>;
+    pipe<A, B, C>(
+        op1: (obs: Observable<T>) => Observable<A>,
+        op2: (obs: Observable<A>) => Observable<B>,
+        op3: (obs: Observable<B>) => Observable<C>
+    ): Observable<C>;
+    pipe<A, B, C, D>(
+        op1: (obs: Observable<T>) => Observable<A>,
+        op2: (obs: Observable<A>) => Observable<B>,
+        op3: (obs: Observable<B>) => Observable<C>,
+        op4: (obs: Observable<C>) => Observable<D>
+    ): Observable<D>;
+    pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): Observable<any>;
 }
 
 /**
@@ -57,7 +75,7 @@ export function asObservable<T, S>(
     store: Store<T>,
     selector?: Selector<T, S>
 ): Observable<T | S> {
-    return {
+    const obs: Observable<T | S> = {
         subscribe(observerOrNext, error, complete) {
             // Handle both callback and observer patterns
             let observer: Observer<T | S>;
@@ -101,7 +119,11 @@ export function asObservable<T, S>(
 
             return subscription;
         },
+        pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): any {
+            return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
+        },
     };
+    return obs;
 }
 
 /**
@@ -147,21 +169,27 @@ export function pipe<T, R>(
  * @returns An operator function
  */
 export function map<T, R>(mapFn: (value: T) => R) {
-    return (observable: Observable<T>): Observable<R> => ({
-        subscribe(observer) {
-            return observable.subscribe({
-                next(value) {
-                    observer.next?.(mapFn(value));
-                },
-                error(err) {
-                    observer.error?.(err);
-                },
-                complete() {
-                    observer.complete?.();
-                },
-            });
-        },
-    });
+    return (source: Observable<T>): Observable<R> => {
+        const obs: Observable<R> = {
+            subscribe(observer: any) {
+                return source.subscribe({
+                    next(value: T) {
+                        (observer as Observer<R>).next?.(mapFn(value));
+                    },
+                    error(err: any) {
+                        (observer as Observer<R>).error?.(err);
+                    },
+                    complete() {
+                        (observer as Observer<R>).complete?.();
+                    },
+                });
+            },
+            pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): any {
+                return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
+            },
+        };
+        return obs;
+    };
 }
 
 /**
@@ -173,23 +201,29 @@ export function map<T, R>(mapFn: (value: T) => R) {
  * @returns An operator function
  */
 export function filter<T>(predicate: (value: T) => boolean) {
-    return (observable: Observable<T>): Observable<T> => ({
-        subscribe(observer) {
-            return observable.subscribe({
-                next(value) {
-                    if (predicate(value)) {
-                        observer.next?.(value);
-                    }
-                },
-                error(err) {
-                    observer.error?.(err);
-                },
-                complete() {
-                    observer.complete?.();
-                },
-            });
-        },
-    });
+    return (source: Observable<T>): Observable<T> => {
+        const obs: Observable<T> = {
+            subscribe(observer: any) {
+                return source.subscribe({
+                    next(value: T) {
+                        if (predicate(value)) {
+                            (observer as Observer<T>).next?.(value);
+                        }
+                    },
+                    error(err: any) {
+                        (observer as Observer<T>).error?.(err);
+                    },
+                    complete() {
+                        (observer as Observer<T>).complete?.();
+                    },
+                });
+            },
+            pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): any {
+                return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
+            },
+        };
+        return obs;
+    };
 }
 
 /**
@@ -201,31 +235,34 @@ export function filter<T>(predicate: (value: T) => boolean) {
  * @returns An operator function
  */
 export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolean) {
-    return (observable: Observable<T>): Observable<T> => {
+    return (source: Observable<T>): Observable<T> => {
         const compare = compareFn ?? ((a: T, b: T) => a === b);
-
-        return {
-            subscribe(observer) {
+        const obs: Observable<T> = {
+            subscribe(observer: any) {
                 let prev: T;
                 let initialized = false;
 
-                return observable.subscribe({
-                    next(value) {
+                return source.subscribe({
+                    next(value: T) {
                         if (!initialized || !compare(prev, value)) {
                             initialized = true;
                             prev = value;
-                            observer.next?.(value);
+                            (observer as Observer<T>).next?.(value);
                         }
                     },
-                    error(err) {
-                        observer.error?.(err);
+                    error(err: any) {
+                        (observer as Observer<T>).error?.(err);
                     },
                     complete() {
-                        observer.complete?.();
+                        (observer as Observer<T>).complete?.();
                     },
                 });
             },
+            pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): any {
+                return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
+            },
         };
+        return obs;
     };
 }
 
@@ -238,32 +275,34 @@ export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolea
  * @returns An operator function
  */
 export function take<T>(count: number) {
-    return (observable: Observable<T>): Observable<T> => {
-        let emitted = 0;
-
-        return {
-            subscribe(observer) {
-                const subscription = observable.subscribe({
-                    next(value) {
+    return (source: Observable<T>): Observable<T> => {
+        const obs: Observable<T> = {
+            subscribe(observer: any) {
+                let emitted = 0;
+                const subscription = source.subscribe({
+                    next(value: T) {
                         if (emitted < count) {
-                            observer.next?.(value);
+                            (observer as Observer<T>).next?.(value);
                             emitted++;
                             if (emitted === count) {
-                                observer.complete?.();
+                                (observer as Observer<T>).complete?.();
                                 subscription.unsubscribe();
                             }
                         }
                     },
-                    error(err) {
-                        observer.error?.(err);
+                    error(err: any) {
+                        (observer as Observer<T>).error?.(err);
                     },
                     complete() {
-                        observer.complete?.();
+                        (observer as Observer<T>).complete?.();
                     },
                 });
-
                 return subscription;
             },
+            pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): any {
+                return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
+            },
         };
+        return obs;
     };
 }
