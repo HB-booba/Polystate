@@ -120,24 +120,13 @@ export abstract class PolystateService<T> implements OnDestroy {
         return this.store.dispatch(action, payload);
     }
 
-    /**
-     * Gets the current state snapshot.
-     * 
-     * @returns The current state
-     */
-    getState(): T {
+    /** Gets the current state snapshot. */
+    getState(): T;
+    /** Gets a selected slice of the state. */
+    getState<S>(selector: Selector<T, S>): S;
+    getState<S>(selector?: Selector<T, S>): T | S {
+        if (selector) return this.store.getState(selector);
         return this.store.getState();
-    }
-
-    /**
-     * Gets a selector value snapshot.
-     * 
-     * @template S - The selected value type
-     * @param selector - Function to select a slice of state
-     * @returns The selected value
-     */
-    getState<S>(selector: Selector<T, S>): S {
-        return this.store.getState(selector);
     }
 }
 
@@ -184,7 +173,7 @@ export abstract class PolystateService<T> implements OnDestroy {
 export function createAngularService<T>(
     initialState: T,
     actions: Record<string, (state: T, payload?: unknown) => T>
-): typeof PolystateService {
+): new () => PolystateService<T> {
     return class extends PolystateService<T> {
         constructor() {
             super();
