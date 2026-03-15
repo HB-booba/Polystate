@@ -188,11 +188,11 @@ describe('@polystate/core — Slices', () => {
         const store = createStore(
             {
                 counter: counterResult.initialState,
-                label:   labelResult.initialState,
+                label: labelResult.initialState,
             },
             {
                 ...prefixActions(counterResult.actions as any, 'counter'),
-                ...prefixActions(labelResult.actions   as any, 'label'),
+                ...prefixActions(labelResult.actions as any, 'label'),
             }
         );
 
@@ -201,7 +201,7 @@ describe('@polystate/core — Slices', () => {
 
         expect(store.getState()).toEqual({
             counter: { count: 1 },
-            label:   { text: 'hello' },
+            label: { text: 'hello' },
         });
     });
 });

@@ -11,10 +11,10 @@
  * Zone.js is imported for consistent Promise scheduling, but instanceof
  * Promise checks are avoided (zone.js wraps Promise → ZoneAwarePromise).
  */
-import 'zone.js';
+import { createAngularService, PolystateService } from '@polystate/angular';
 import { firstValueFrom, take, toArray } from 'rxjs';
 import { describe, expect, it } from 'vitest';
-import { createAngularService, PolystateService } from '@polystate/angular';
+import 'zone.js';
 
 // Prevents Date.now() collisions in rapid back-to-back dispatches
 const tick = () => new Promise<void>((r) => setTimeout(r, 1));
@@ -249,7 +249,7 @@ describe('@polystate/angular — ngOnDestroy', () => {
         svc.ngOnDestroy();
 
         // Dispatch after destroy — should NOT produce new emissions
-        await svc.dispatch('setFilter', 'done').catch(() => {});
+        await svc.dispatch('setFilter', 'done').catch(() => { });
 
         expect(emissions).toEqual(['all']); // only the subscription-time emission
         sub.unsubscribe();
