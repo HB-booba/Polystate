@@ -17,11 +17,10 @@ import {
     distinctUntilChanged,
     filter,
     loadPersistedState,
-    loggerMiddleware,
     map,
     persistMiddleware,
     prefixActions,
-    take,
+    take
 } from '../packages/core/dist/index.js';
 
 const hr = (label) =>

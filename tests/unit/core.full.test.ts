@@ -157,7 +157,7 @@ describe('Store — dispatch', () => {
 
     it('warns and no-ops on unknown action', async () => {
         const store = makeStore();
-        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => { });
         await store.dispatch('nonexistent');
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('nonexistent'));
         expect(store.getState((s) => s.count)).toBe(0);
@@ -372,9 +372,9 @@ describe('Store — subscriptions', () => {
 
 describe('Store — logging option', () => {
     it('logging:true automatically adds loggerMiddleware', async () => {
-        const group = vi.spyOn(console, 'group').mockImplementation(() => {});
-        const groupEnd = vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
-        vi.spyOn(console, 'log').mockImplementation(() => {});
+        const group = vi.spyOn(console, 'group').mockImplementation(() => { });
+        const groupEnd = vi.spyOn(console, 'groupEnd').mockImplementation(() => { });
+        vi.spyOn(console, 'log').mockImplementation(() => { });
 
         const store = createStore({ n: 0 }, {
             inc: (s: { n: number }) => ({ n: s.n + 1 }),
@@ -392,8 +392,8 @@ describe('Store — logging option', () => {
     it('explicit middleware runs AFTER the built-in logger', async () => {
         const order: string[] = [];
         vi.spyOn(console, 'group').mockImplementation(() => order.push('logger'));
-        vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
-        vi.spyOn(console, 'log').mockImplementation(() => {});
+        vi.spyOn(console, 'groupEnd').mockImplementation(() => { });
+        vi.spyOn(console, 'log').mockImplementation(() => { });
 
         const custom = () => { order.push('custom'); };
 
@@ -707,7 +707,7 @@ describe('Observable operators', () => {
 
     it('subscription.closed reflects unsubscribe state', async () => {
         const store = makeStore();
-        const sub = asObservable(store).subscribe(() => {});
+        const sub = asObservable(store).subscribe(() => { });
         expect(sub.closed).toBe(false);
         sub.unsubscribe();
         expect(sub.closed).toBe(true);
@@ -724,9 +724,9 @@ describe('loggerMiddleware output', () => {
     let groupEnd: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-        group = vi.spyOn(console, 'group').mockImplementation(() => {});
-        log = vi.spyOn(console, 'log').mockImplementation(() => {});
-        groupEnd = vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
+        group = vi.spyOn(console, 'group').mockImplementation(() => { });
+        log = vi.spyOn(console, 'log').mockImplementation(() => { });
+        groupEnd = vi.spyOn(console, 'groupEnd').mockImplementation(() => { });
     });
 
     afterEach(() => {

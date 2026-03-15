@@ -674,14 +674,20 @@ interface TodoState {
 const store = createStore<TodoState>(
   { todos: [], filter: 'all', loading: false },
   {
-    addTodo:    (s, text: string)               => ({ ...s, todos: [...s.todos, { id: Date.now(), text, done: false }] }),
-    toggle:     (s, id: number)                 => ({ ...s, todos: s.todos.map(t => t.id === id ? { ...t, done: !t.done } : t) }),
-    remove:     (s, id: number)                 => ({ ...s, todos: s.todos.filter(t => t.id !== id) }),
-    setFilter:  (s, f: TodoState['filter'])     => ({ ...s, filter: f }),
-    setLoading: (s, loading: boolean)           => ({ ...s, loading }),
+    addTodo: (s, text: string) => ({
+      ...s,
+      todos: [...s.todos, { id: Date.now(), text, done: false }],
+    }),
+    toggle: (s, id: number) => ({
+      ...s,
+      todos: s.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
+    }),
+    remove: (s, id: number) => ({ ...s, todos: s.todos.filter((t) => t.id !== id) }),
+    setFilter: (s, f: TodoState['filter']) => ({ ...s, filter: f }),
+    setLoading: (s, loading: boolean) => ({ ...s, loading }),
   },
   {
-    logging: true,   // auto-attaches loggerMiddleware
+    logging: true, // auto-attaches loggerMiddleware
     // middleware: [persistMiddleware('todos')],
   }
 );
@@ -693,17 +699,17 @@ const store = createStore<TodoState>(
 
 ### Store methods
 
-| Method | Signature | Notes |
-|--------|-----------|-------|
-| `getState()` | `() => T` | Full state snapshot |
-| `getState(selector)` | `(sel: (s: T) => S) => S` | Read a slice |
-| `dispatch(action, payload?)` | `(string \| ThunkAction, any?) => Promise<void>` | Dispatch named action or thunk |
-| `setState(patch)` | `(Partial<T>) => void` | Bypass action handlers for direct patch |
-| `subscribe(listener)` | `(cb: (s: T) => void) => Unsubscriber` | Global subscription |
-| `subscribe(selector, listener)` | `(sel, cb) => Unsubscriber` | Selective — only re-fires when `sel(state)` changes (`===`) |
-| `getActionNames()` | `() => string[]` | Introspect registered actions |
-| `reset()` | `() => void` | Restore initial state and notify subscribers |
-| `destroy()` | `() => void` | Remove all subscribers and prevent further updates |
+| Method                          | Signature                                        | Notes                                                       |
+| ------------------------------- | ------------------------------------------------ | ----------------------------------------------------------- |
+| `getState()`                    | `() => T`                                        | Full state snapshot                                         |
+| `getState(selector)`            | `(sel: (s: T) => S) => S`                        | Read a slice                                                |
+| `dispatch(action, payload?)`    | `(string \| ThunkAction, any?) => Promise<void>` | Dispatch named action or thunk                              |
+| `setState(patch)`               | `(Partial<T>) => void`                           | Bypass action handlers for direct patch                     |
+| `subscribe(listener)`           | `(cb: (s: T) => void) => Unsubscriber`           | Global subscription                                         |
+| `subscribe(selector, listener)` | `(sel, cb) => Unsubscriber`                      | Selective — only re-fires when `sel(state)` changes (`===`) |
+| `getActionNames()`              | `() => string[]`                                 | Introspect registered actions                               |
+| `reset()`                       | `() => void`                                     | Restore initial state and notify subscribers                |
+| `destroy()`                     | `() => void`                                     | Remove all subscribers and prevent further updates          |
 
 ---
 
@@ -719,7 +725,7 @@ unsubscribe(); // stop listening
 // ── Selective — fires only when the selected slice changes ───────────────────
 const unsubFilter = store.subscribe(
   (s) => s.filter,
-  (filter) => renderFilterLabel(filter)  // only re-runs when filter changes
+  (filter) => renderFilterLabel(filter) // only re-runs when filter changes
 );
 ```
 
@@ -732,7 +738,7 @@ Dispatch a function instead of a string to get access to `dispatch` and `getStat
 ```typescript
 const loadTodos = async (dispatch, getState) => {
   await dispatch('setLoading', true);
-  const data = await fetch('/api/todos').then(r => r.json());
+  const data = await fetch('/api/todos').then((r) => r.json());
   await dispatch('setTodos', data);
   console.log('loaded', getState().todos.length, 'todos');
 };
@@ -769,21 +775,22 @@ store.destroy();
 Middleware runs **after** state is updated. It is purely for side effects.
 
 ```typescript
-import { createStore, loggerMiddleware, persistMiddleware, loadPersistedState } from '@polystate/core';
+import {
+  createStore,
+  loggerMiddleware,
+  persistMiddleware,
+  loadPersistedState,
+} from '@polystate/core';
 
 const key = 'myapp:todos';
 const savedState = loadPersistedState<TodoState>(key);
 
-const store = createStore(
-  savedState ?? initialState,
-  actions,
-  {
-    middleware: [
-      loggerMiddleware(),           // console groups every action
-      persistMiddleware(key),       // auto-saves nextState to localStorage
-    ],
-  }
-);
+const store = createStore(savedState ?? initialState, actions, {
+  middleware: [
+    loggerMiddleware(), // console groups every action
+    persistMiddleware(key), // auto-saves nextState to localStorage
+  ],
+});
 ```
 
 **Custom middleware:**
@@ -806,10 +813,7 @@ const counterSlice = createSlice(
   { inc: (s) => ({ count: s.count + 1 }), set: (s, n: number) => ({ count: n }) }
 );
 
-const labelSlice = createSlice(
-  { text: 'default' },
-  { update: (s, t: string) => ({ text: t }) }
-);
+const labelSlice = createSlice({ text: 'default' }, { update: (s, t: string) => ({ text: t }) });
 
 // composeSlices extracts {initialState, actions} from each slice
 const [counterResult, labelResult] = composeSlices([counterSlice, labelSlice]);
@@ -864,7 +868,14 @@ import { distinctUntilChanged as rxDistinct } from 'rxjs/operators';
 
 ```tsx
 import { createStore } from '@polystate/core';
-import { useStore, useSelector, useDispatch, useSetState, createStoreHooks, createStoreContext } from '@polystate/react';
+import {
+  useStore,
+  useSelector,
+  useDispatch,
+  useSetState,
+  createStoreHooks,
+  createStoreContext,
+} from '@polystate/react';
 
 const todoStore = createStore(initialState, actions);
 
@@ -875,15 +886,20 @@ function TodoList() {
 
   return (
     <>
-      {todos.map(t => <li key={t.id}>{t.text}</li>)}
+      {todos.map((t) => (
+        <li key={t.id}>{t.text}</li>
+      ))}
       <button onClick={() => dispatch('addTodo', 'New task')}>Add</button>
     </>
   );
 }
 
 // ── Option B: pre-bound hooks (recommended) ───────────────────────────────────
-const { useStore: useTodoStore, useSelector: useTodoSel, useDispatch: useTodoDispatch } =
-  createStoreHooks(todoStore);
+const {
+  useStore: useTodoStore,
+  useSelector: useTodoSel,
+  useDispatch: useTodoDispatch,
+} = createStoreHooks(todoStore);
 
 // ── Option C: React Context ───────────────────────────────────────────────────
 const { Provider, useContextStore } = createStoreContext(todoStore);
@@ -899,14 +915,14 @@ function App() {
 
 **All hooks use `useSyncExternalStore`** (React 18+) — tearing-safe, concurrent rendering compatible.
 
-| Hook | Purpose |
-|------|---------|
-| `useStore(store)` | Subscribe to full state |
-| `useSelector(store, sel)` | Subscribe to a slice; skips re-renders when selected value is unchanged |
-| `useDispatch(store)` | Returns stable `{ dispatch }` memoized with `useCallback` |
-| `useSetState(store)` | Returns `(patch: Partial<T>) => void` for direct partial updates |
-| `createStoreHooks(store)` | Pre-binds all four hooks to a specific store |
-| `createStoreContext(store)` | Creates React Context `Provider` + `useContextStore()` |
+| Hook                        | Purpose                                                                 |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `useStore(store)`           | Subscribe to full state                                                 |
+| `useSelector(store, sel)`   | Subscribe to a slice; skips re-renders when selected value is unchanged |
+| `useDispatch(store)`        | Returns stable `{ dispatch }` memoized with `useCallback`               |
+| `useSetState(store)`        | Returns `(patch: Partial<T>) => void` for direct partial updates        |
+| `createStoreHooks(store)`   | Pre-binds all four hooks to a specific store                            |
+| `createStoreContext(store)` | Creates React Context `Provider` + `useContextStore()`                  |
 
 ---
 
@@ -917,10 +933,7 @@ import { Injectable } from '@angular/core';
 import { createAngularService } from '@polystate/angular';
 
 @Injectable({ providedIn: 'root' })
-export class TodoService extends createAngularService<TodoState>(
-  initialState,
-  actions
-) {}
+export class TodoService extends createAngularService<TodoState>(initialState, actions) {}
 ```
 
 The base class provides:
@@ -946,13 +959,13 @@ Subscriptions are **automatically cleaned up** via `takeUntil(destroy$)` on `ngO
 
 ### Performance (measured on Apple M-series)
 
-| Operation | Throughput |
-|-----------|-----------|
-| `getState()` | ~23 M ops/sec |
-| `dispatch` (simple action) | ~3.2 M ops/sec |
-| `setState` (no subscribers) | ~6.2 M ops/sec |
-| `reset()` | ~6.7 M ops/sec |
-| `subscribe + unsubscribe` | ~5.4 M ops/sec |
+| Operation                              | Throughput     |
+| -------------------------------------- | -------------- |
+| `getState()`                           | ~23 M ops/sec  |
+| `dispatch` (simple action)             | ~3.2 M ops/sec |
+| `setState` (no subscribers)            | ~6.2 M ops/sec |
+| `reset()`                              | ~6.7 M ops/sec |
+| `subscribe + unsubscribe`              | ~5.4 M ops/sec |
 | `dispatch` with 100 global subscribers | ~225 K ops/sec |
 
 Bundle sizes (gzipped): `@polystate/core` < 1.5 KB · `@polystate/react` < 0.5 KB · `@polystate/angular` < 1 KB

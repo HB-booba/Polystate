@@ -36,7 +36,7 @@ const makePayloadStore = () =>
     createStore(
         { n: 0, label: '' },
         {
-            setN:     (s: any, n: number) => ({ ...s, n }),
+            setN: (s: any, n: number) => ({ ...s, n }),
             setLabel: (s: any, l: string) => ({ ...s, label: l }),
         }
     );
@@ -74,38 +74,38 @@ describe('Dispatch throughput', () => {
 describe('Subscribe / unsubscribe', () => {
     bench('subscribe + unsubscribe (global)', () => {
         const store = makeCounter();
-        const unsub = store.subscribe((_) => {});
+        const unsub = store.subscribe((_) => { });
         unsub();
     });
 
     bench('subscribe + unsubscribe (selective)', () => {
         const store = makeCounter();
         const sel = (s: { count: number }) => s.count;
-        const unsub = store.subscribe(sel, (_) => {});
+        const unsub = store.subscribe(sel, (_) => { });
         unsub();
     });
 
     bench('dispatch with 1 global subscriber', async () => {
         const store = makeCounter();
-        store.subscribe((_) => {});
+        store.subscribe((_) => { });
         await store.dispatch('inc');
     });
 
     bench('dispatch with 10 global subscribers', async () => {
         const store = makeCounter();
-        for (let i = 0; i < 10; i++) store.subscribe((_) => {});
+        for (let i = 0; i < 10; i++) store.subscribe((_) => { });
         await store.dispatch('inc');
     });
 
     bench('dispatch with 100 global subscribers', async () => {
         const store = makeCounter();
-        for (let i = 0; i < 100; i++) store.subscribe((_) => {});
+        for (let i = 0; i < 100; i++) store.subscribe((_) => { });
         await store.dispatch('inc');
     });
 
     bench('dispatch with 1 selective subscriber (matching)', async () => {
         const store = makeCounter();
-        store.subscribe((s) => s.count, (_) => {});
+        store.subscribe((s) => s.count, (_) => { });
         await store.dispatch('inc');
     });
 
@@ -116,7 +116,7 @@ describe('Subscribe / unsubscribe', () => {
         );
         for (let i = 0; i < 10; i++) {
             const key = `k${i}`;
-            store.subscribe((s: any) => s[key], () => {});
+            store.subscribe((s: any) => s[key], () => { });
         }
         await store.dispatch('inc');
     });
@@ -150,7 +150,7 @@ describe('setState', () => {
 
     bench('setState — partial update, 5 global subscribers', () => {
         const store = makeCounter();
-        for (let i = 0; i < 5; i++) store.subscribe(() => {});
+        for (let i = 0; i < 5; i++) store.subscribe(() => { });
         store.setState({ count: 42 });
     });
 });
@@ -178,7 +178,7 @@ describe('reset / destroy', () => {
 describe('Observable operator chains', () => {
     bench('asObservable subscribe + 1 dispatch', async () => {
         const store = makeCounter();
-        const sub = asObservable(store, (s) => s.count).subscribe(() => {});
+        const sub = asObservable(store, (s) => s.count).subscribe(() => { });
         await store.dispatch('inc');
         sub.unsubscribe();
     });
@@ -187,7 +187,7 @@ describe('Observable operator chains', () => {
         const store = makeCounter();
         const sub = asObservable(store, (s) => s.count)
             .pipe(map((n) => n * 2))
-            .subscribe(() => {});
+            .subscribe(() => { });
         await store.dispatch('inc');
         sub.unsubscribe();
     });
@@ -200,7 +200,7 @@ describe('Observable operator chains', () => {
                 filter((n) => n % 4 === 0),
                 distinctUntilChanged()
             )
-            .subscribe(() => {});
+            .subscribe(() => { });
         for (let i = 0; i < 10; i++) await store.dispatch('inc');
         sub.unsubscribe();
     });
@@ -209,7 +209,7 @@ describe('Observable operator chains', () => {
         const store = makeCounter();
         const sub = asObservable(store, (s) => s.count)
             .pipe(take(50))
-            .subscribe(() => {});
+            .subscribe(() => { });
         for (let i = 0; i < 50; i++) await store.dispatch('inc');
         sub.unsubscribe();
     });
