@@ -46,3 +46,4 @@ examples/*/.angular
 .cache
 .turbo
 .changeset
+polystate.zip

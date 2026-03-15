@@ -1,4 +1,5 @@
 import type { Middleware, MiddlewareContext } from './middleware';
+import { loggerMiddleware } from './middleware';
 import { Signal } from './signal';
 
 /**
@@ -47,7 +48,7 @@ export interface StoreOptions<T = any> {
  * @template T - The store state type
  */
 export type ThunkAction<T = any> = (
-    dispatch: (action: string, payload?: unknown) => void | Promise<void>,
+    dispatch: (action: string | ThunkAction<T>, payload?: unknown) => Promise<void>,
     getState: () => T
 ) => void | Promise<void>;
 
@@ -76,6 +77,8 @@ export class Store<T> {
     private middleware: Middleware<T>[];
     private globalSubscribers: Set<Subscriber<T>> = new Set();
     private selectiveSubscribers: Map<Selector<T, any>, Set<Subscriber<any>>> = new Map();
+    private readonly initialState: T;
+    private _destroyed = false;
 
     /**
      * Creates a new Store instance.
@@ -84,9 +87,11 @@ export class Store<T> {
      * @param options - Optional configuration
      */
     constructor(initialState: T, actions: ActionMap<T>, options?: StoreOptions<T>) {
+        this.initialState = initialState;
         this.signal = new Signal(initialState);
         this.actions = actions;
-        this.middleware = options?.middleware ?? [];
+        const extra: Middleware<T>[] = options?.logging ? [loggerMiddleware()] : [];
+        this.middleware = [...extra, ...(options?.middleware ?? [])];
     }
 
     /**
@@ -118,12 +123,14 @@ export class Store<T> {
      * @param payload - Optional payload for the action
      */
     async dispatch(action: string | ThunkAction<T>, payload?: unknown): Promise<void> {
+        if (this._destroyed) return;
+
         // Handle thunk actions
         if (typeof action === 'function') {
             return action(
-                (name: string, data?: unknown) => this.dispatch(name, data),
+                (name: string | ThunkAction<T>, data?: unknown) => this.dispatch(name, data),
                 () => this.getState()
-            );
+            ) as Promise<void>;
         }
 
         const prevState = this.signal.value;
@@ -152,6 +159,34 @@ export class Store<T> {
 
         // Notify subscribers
         this.notifySubscribers(prevState, nextState, action);
+    }
+
+    /**
+     * Returns the names of all registered action handlers.
+     */
+    getActionNames(): string[] {
+        return Object.keys(this.actions);
+    }
+
+    /**
+     * Resets the store to its initial state and notifies all subscribers.
+     * Useful for testing and hard resets (e.g. on logout).
+     */
+    reset(): void {
+        const prevState = this.signal.value;
+        this.signal.value = this.initialState;
+        this.notifySubscribers(prevState, this.initialState, '__reset__');
+    }
+
+    /**
+     * Destroys the store — removes all subscribers and prevents further updates.
+     * Call when the store is no longer needed to avoid memory leaks in long-lived
+     * applications that create stores dynamically.
+     */
+    destroy(): void {
+        this._destroyed = true;
+        this.globalSubscribers.clear();
+        this.selectiveSubscribers.clear();
     }
 
     /**

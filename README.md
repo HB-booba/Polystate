@@ -639,58 +639,323 @@ All code is **production-ready** with:
 - ✅ Error handling patterns
 - ✅ Auto-persistence to localStorage
 
-## 📚 Core Features
+## 📚 Runtime API Reference
 
-### Store Basics
+> This section covers the `@polystate/core`, `@polystate/react`, and `@polystate/angular`
+> runtime adapters. If you prefer generated Redux/NgRx code, see the
+> [Code Generation](#-getting-started-code-generation) section above.
 
-- **`createStore(initialState, actions)`** - Create a reactive store
-- **`setState(patch)`** - Partial or full state update
-- **`subscribe(listener)`** - Listen to all changes
-- **`subscribe(selector, listener)`** - Selective subscription
-- **`getState(selector?)`** - Snapshot read
+### Installation
 
-### Code Generation
+```bash
+# Core only (framework-agnostic, zero dependencies)
+npm install @polystate/core
 
-- **`@polystate/definition`** - Define stores (0 dependencies)
-- **`@polystate/generator-react`** - Generate Redux code
-- **`@polystate/generator-angular`** - Generate NgRx code
-- **`@polystate/cli`** - CLI tool: `polystate generate`
+# With React 18+
+npm install @polystate/core @polystate/react
+
+# With Angular 17+
+npm install @polystate/core @polystate/angular
+```
+
+---
+
+### `createStore` — the foundation
+
+```typescript
+import { createStore } from '@polystate/core';
+
+interface TodoState {
+  todos: Array<{ id: number; text: string; done: boolean }>;
+  filter: 'all' | 'active' | 'done';
+  loading: boolean;
+}
+
+const store = createStore<TodoState>(
+  { todos: [], filter: 'all', loading: false },
+  {
+    addTodo:    (s, text: string)               => ({ ...s, todos: [...s.todos, { id: Date.now(), text, done: false }] }),
+    toggle:     (s, id: number)                 => ({ ...s, todos: s.todos.map(t => t.id === id ? { ...t, done: !t.done } : t) }),
+    remove:     (s, id: number)                 => ({ ...s, todos: s.todos.filter(t => t.id !== id) }),
+    setFilter:  (s, f: TodoState['filter'])     => ({ ...s, filter: f }),
+    setLoading: (s, loading: boolean)           => ({ ...s, loading }),
+  },
+  {
+    logging: true,   // auto-attaches loggerMiddleware
+    // middleware: [persistMiddleware('todos')],
+  }
+);
+```
+
+> **Immutability rule**: every action handler must return a **new object** — never mutate `state` in place.
+
+---
+
+### Store methods
+
+| Method | Signature | Notes |
+|--------|-----------|-------|
+| `getState()` | `() => T` | Full state snapshot |
+| `getState(selector)` | `(sel: (s: T) => S) => S` | Read a slice |
+| `dispatch(action, payload?)` | `(string \| ThunkAction, any?) => Promise<void>` | Dispatch named action or thunk |
+| `setState(patch)` | `(Partial<T>) => void` | Bypass action handlers for direct patch |
+| `subscribe(listener)` | `(cb: (s: T) => void) => Unsubscriber` | Global subscription |
+| `subscribe(selector, listener)` | `(sel, cb) => Unsubscriber` | Selective — only re-fires when `sel(state)` changes (`===`) |
+| `getActionNames()` | `() => string[]` | Introspect registered actions |
+| `reset()` | `() => void` | Restore initial state and notify subscribers |
+| `destroy()` | `() => void` | Remove all subscribers and prevent further updates |
+
+---
+
+### Subscriptions
+
+```typescript
+// ── Global — fires on every dispatch ─────────────────────────────────────────
+const unsubscribe = store.subscribe((state) => {
+  console.log('new state:', state);
+});
+unsubscribe(); // stop listening
+
+// ── Selective — fires only when the selected slice changes ───────────────────
+const unsubFilter = store.subscribe(
+  (s) => s.filter,
+  (filter) => renderFilterLabel(filter)  // only re-runs when filter changes
+);
+```
+
+---
+
+### Thunks — async actions
+
+Dispatch a function instead of a string to get access to `dispatch` and `getState`:
+
+```typescript
+const loadTodos = async (dispatch, getState) => {
+  await dispatch('setLoading', true);
+  const data = await fetch('/api/todos').then(r => r.json());
+  await dispatch('setTodos', data);
+  console.log('loaded', getState().todos.length, 'todos');
+};
+
+await store.dispatch(loadTodos);
+```
+
+Thunks can also dispatch other thunks:
+
+```typescript
+const withAuth = async (dispatch, getState) => {
+  if (!getState().token) await dispatch(refreshToken); // dispatch thunk
+  await dispatch(loadTodos);
+};
+```
+
+---
+
+### Reset & destroy
+
+```typescript
+// Restore to the exact initialState passed to createStore
+store.reset();
+
+// Tear down: clear all subscribers, ignore future dispatches
+// Use when dynamically creating/destroying stores (e.g. per-route stores)
+store.destroy();
+```
+
+---
 
 ### Middleware
 
-- **Logger**: Log all actions and state changes
-- **Thunk**: Async action support built-in
-- **Persist**: Auto-save/load state to localStorage
-- **DevTools**: Redux DevTools Extension integration
-- **Custom**: Write your own middleware
-
-### Slices (Redux Toolkit Style)
+Middleware runs **after** state is updated. It is purely for side effects.
 
 ```typescript
+import { createStore, loggerMiddleware, persistMiddleware, loadPersistedState } from '@polystate/core';
+
+const key = 'myapp:todos';
+const savedState = loadPersistedState<TodoState>(key);
+
+const store = createStore(
+  savedState ?? initialState,
+  actions,
+  {
+    middleware: [
+      loggerMiddleware(),           // console groups every action
+      persistMiddleware(key),       // auto-saves nextState to localStorage
+    ],
+  }
+);
+```
+
+**Custom middleware:**
+
+```typescript
+const analyticsMiddleware = async ({ action, payload, nextState, dispatch }) => {
+  analytics.track(action, { payload });
+};
+```
+
+---
+
+### Slices (composable state)
+
+```typescript
+import { createSlice, prefixActions, composeSlices } from '@polystate/core';
+
 const counterSlice = createSlice(
   { count: 0 },
+  { inc: (s) => ({ count: s.count + 1 }), set: (s, n: number) => ({ count: n }) }
+);
+
+const labelSlice = createSlice(
+  { text: 'default' },
+  { update: (s, t: string) => ({ text: t }) }
+);
+
+// composeSlices extracts {initialState, actions} from each slice
+const [counterResult, labelResult] = composeSlices([counterSlice, labelSlice]);
+
+// prefixActions namespaces actions: 'counter/inc', 'label/update', etc.
+const store = createStore(
+  { counter: counterResult.initialState, label: labelResult.initialState },
   {
-    increment: (state) => ({ count: state.count + 1 }),
-    decrement: (state) => ({ count: state.count - 1 }),
+    ...prefixActions(counterResult.actions, 'counter'),
+    ...prefixActions(labelResult.actions, 'label'),
   }
 );
 
-const store = createStore({ counter: counterSlice.initialState }, { ...counterSlice.actions });
+await store.dispatch('counter/inc');
+await store.dispatch('label/update', 'hello');
+// → { counter: { count: 1 }, label: { text: 'hello' } }
 ```
 
-### RxJS Compatibility
+---
+
+### Observables (RxJS-compatible)
+
+`asObservable` returns a zero-dependency observable with `pipe`, `map`, `filter`,
+`distinctUntilChanged`, and `take` — compatible with RxJS operators.
 
 ```typescript
-import { asObservable } from '@polystate/core';
+import { asObservable, map, filter, distinctUntilChanged, take } from '@polystate/core';
 
-const observable$ = asObservable(store);
-observable$
+// Full state
+asObservable(store).subscribe((state) => console.log(state));
+
+// Selector variant — only emits when todos.length changes
+asObservable(store, (s) => s.todos.length).subscribe((n) => console.log(n, 'todos'));
+
+// Operator chain without RxJS
+asObservable(store, (s) => s.todos)
   .pipe(
-    map((state) => state.todos),
-    filter((todos) => todos.length > 0)
+    map((todos) => todos.filter((t) => !t.done)),
+    filter((active) => active.length > 0),
+    take(10)
   )
-  .subscribe(console.log);
+  .subscribe((activeTodos) => renderList(activeTodos));
+
+// With RxJS — interchangeable (same interface)
+import { distinctUntilChanged as rxDistinct } from 'rxjs/operators';
+// asObservable(store).pipe(rxDistinct()).subscribe(...)
 ```
+
+---
+
+### React hooks (`@polystate/react`)
+
+```tsx
+import { createStore } from '@polystate/core';
+import { useStore, useSelector, useDispatch, useSetState, createStoreHooks, createStoreContext } from '@polystate/react';
+
+const todoStore = createStore(initialState, actions);
+
+// ── Option A: global hooks ────────────────────────────────────────────────────
+function TodoList() {
+  const todos = useSelector(todoStore, (s) => s.todos); // only re-renders when todos changes
+  const { dispatch } = useDispatch(todoStore);
+
+  return (
+    <>
+      {todos.map(t => <li key={t.id}>{t.text}</li>)}
+      <button onClick={() => dispatch('addTodo', 'New task')}>Add</button>
+    </>
+  );
+}
+
+// ── Option B: pre-bound hooks (recommended) ───────────────────────────────────
+const { useStore: useTodoStore, useSelector: useTodoSel, useDispatch: useTodoDispatch } =
+  createStoreHooks(todoStore);
+
+// ── Option C: React Context ───────────────────────────────────────────────────
+const { Provider, useContextStore } = createStoreContext(todoStore);
+
+function App() {
+  return (
+    <Provider>
+      <TodoList />
+    </Provider>
+  );
+}
+```
+
+**All hooks use `useSyncExternalStore`** (React 18+) — tearing-safe, concurrent rendering compatible.
+
+| Hook | Purpose |
+|------|---------|
+| `useStore(store)` | Subscribe to full state |
+| `useSelector(store, sel)` | Subscribe to a slice; skips re-renders when selected value is unchanged |
+| `useDispatch(store)` | Returns stable `{ dispatch }` memoized with `useCallback` |
+| `useSetState(store)` | Returns `(patch: Partial<T>) => void` for direct partial updates |
+| `createStoreHooks(store)` | Pre-binds all four hooks to a specific store |
+| `createStoreContext(store)` | Creates React Context `Provider` + `useContextStore()` |
+
+---
+
+### Angular service (`@polystate/angular`)
+
+```typescript
+import { Injectable } from '@angular/core';
+import { createAngularService } from '@polystate/angular';
+
+@Injectable({ providedIn: 'root' })
+export class TodoService extends createAngularService<TodoState>(
+  initialState,
+  actions
+) {}
+```
+
+The base class provides:
+
+```typescript
+// Angular Signal (requires injection context)
+todos = this.select((s) => s.todos);
+
+// RxJS Observable (async pipe compatible)
+todos$ = this.select$((s) => s.todos);
+
+// Dispatch
+this.dispatch('addTodo', 'Buy milk');
+
+// Snapshot
+this.getState();
+this.getState((s) => s.todos.length);
+```
+
+Subscriptions are **automatically cleaned up** via `takeUntil(destroy$)` on `ngOnDestroy`.
+
+---
+
+### Performance (measured on Apple M-series)
+
+| Operation | Throughput |
+|-----------|-----------|
+| `getState()` | ~23 M ops/sec |
+| `dispatch` (simple action) | ~3.2 M ops/sec |
+| `setState` (no subscribers) | ~6.2 M ops/sec |
+| `reset()` | ~6.7 M ops/sec |
+| `subscribe + unsubscribe` | ~5.4 M ops/sec |
+| `dispatch` with 100 global subscribers | ~225 K ops/sec |
+
+Bundle sizes (gzipped): `@polystate/core` < 1.5 KB · `@polystate/react` < 0.5 KB · `@polystate/angular` < 1 KB
 
 ## 🔧 Configuration
 
