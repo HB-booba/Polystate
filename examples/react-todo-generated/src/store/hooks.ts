@@ -3,23 +3,14 @@
  * Do not edit manually - regenerate with: polystate generate
  */
 
+import { useDispatch, useSelector as useReduxSelector, TypedUseSelectorHook } from 'react-redux';
 import { useMemo } from 'react';
+import type { RootState, AppDispatch } from './store';
 import {
-    TypedUseSelectorHook,
-    useDispatch,
-    useSelector as useReduxSelector,
-} from 'react-redux';
-import type { AppDispatch, RootState } from './store';
-import {
-    addTodo,
-    removeTodo,
-    selectActiveTodoCount,
-    selectCompletedTodoCount,
-    selectFilter,
-    selectFilteredTodos,
-    selectTodos,
-    setFilter,
-    toggleTodo,
+  addTodo,
+  toggleTodo,
+  removeTodo,
+  setFilter,
 } from './store';
 
 // ============================================================================
@@ -37,7 +28,7 @@ export const useAppDispatch = () => useDispatch<AppDispatch>();
  * Get the entire todo state
  */
 export function useTodoState() {
-    return useSelector((state) => state.todo);
+  return useSelector((state) => state.todo);
 }
 
 // ============================================================================
@@ -48,54 +39,41 @@ export function useTodoState() {
  * Get all action dispatchers for todo
  */
 export function useTodoDispatch() {
-    const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
 
-    return useMemo(
-        () => ({
-            addTodo: (title: string) => dispatch(addTodo(title)),
-            toggleTodo: (id: number) => dispatch(toggleTodo(id)),
-            removeTodo: (id: number) => dispatch(removeTodo(id)),
-            setFilter: (filter: string) => dispatch(setFilter(filter)),
-        }),
-        [dispatch]
-    );
+  return useMemo(
+    () => ({
+      addTodo: (payload: any) => dispatch(addTodo(payload)),
+      toggleTodo: (payload: any) => dispatch(toggleTodo(payload)),
+      removeTodo: (payload: any) => dispatch(removeTodo(payload)),
+      setFilter: (payload: any) => dispatch(setFilter(payload)),
+    }),
+    [dispatch]
+  );
 }
 
 // ============================================================================
 // Selector Hooks
 // ============================================================================
 
-/**
- * Get all todos
- */
 export function useTodos() {
-    return useSelector(selectTodos);
+  return useSelector((state) => state.todo.todos);
 }
 
-/**
- * Get current filter
- */
 export function useFilter() {
-    return useSelector(selectFilter);
+  return useSelector((state) => state.todo.filter);
 }
 
-/**
- * Get filtered todos
- */
 export function useFilteredTodos() {
-    return useSelector(selectFilteredTodos);
+  const todos = useTodos() as any[];
+  const filter = useFilter() as string;
+
+  if (filter === 'active') return todos.filter((todo: any) => !todo.done);
+  if (filter === 'completed') return todos.filter((todo: any) => !!todo.done);
+  return todos;
 }
 
-/**
- * Get count of active (uncompleted) todos
- */
 export function useActiveTodoCount() {
-    return useSelector(selectActiveTodoCount);
-}
-
-/**
- * Get count of completed todos
- */
-export function useCompletedTodoCount() {
-    return useSelector(selectCompletedTodoCount);
+  const todos = useTodos() as any[];
+  return todos.filter((todo: any) => !todo.done).length;
 }

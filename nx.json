@@ -9,23 +9,11 @@
       "includeSourceCommit": false
     }
   },
-  "plugins": [
-    {
-      "plugin": "@nx/js/core",
-      "options": {
-        "targetDefaults": {
-          "@nx/js:tsc": {
-            "cacheableOutputs": [
-              "{projectRoot}/dist"
-            ]
-          }
-        }
-      }
-    }
-  ],
   "targetDefaults": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "cache": true
     },
     "test": {

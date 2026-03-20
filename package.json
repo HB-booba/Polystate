@@ -19,6 +19,8 @@
   },
   "devDependencies": {
     "@angular/core": "^17.3.12",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "@changesets/cli": "^2.27.1",
     "@nx/angular": "^18.0.0",
     "@nx/devkit": "^18.0.0",

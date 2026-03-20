@@ -24,7 +24,10 @@ import {
 } from '@polystate/generator-react';
 import { program } from 'commander';
 import * as fs from 'fs';
+import { createRequire } from 'module';
 import * as path from 'path';
+import * as ts from 'typescript';
+import { pathToFileURL } from 'url';
 
 interface GenerateOptions {
     outDir?: string;
@@ -61,7 +64,7 @@ program
             }
 
             // Load the definition file
-            const moduleExports = require(absolutePath);
+            const moduleExports = await loadDefinitionModule(absolutePath);
             const definition =
                 moduleExports.default || Object.values(moduleExports)[0];
 
@@ -116,7 +119,7 @@ program
 program
     .command('validate <definitionFile>')
     .description('Validate a store definition file')
-    .action((definitionFile: string) => {
+    .action(async (definitionFile: string) => {
         try {
             console.log('🔍 Validating store definition...');
 
@@ -127,7 +130,7 @@ program
                 process.exit(1);
             }
 
-            const moduleExports = require(absolutePath);
+            const moduleExports = await loadDefinitionModule(absolutePath);
             const definition =
                 moduleExports.default || Object.values(moduleExports)[0];
 
@@ -215,4 +218,43 @@ function writeFile(filePath: string, content: string, overwrite: boolean) {
         return;
     }
     fs.writeFileSync(filePath, content, 'utf-8');
+}
+
+async function loadDefinitionModule(absolutePath: string): Promise<Record<string, unknown>> {
+    const ext = path.extname(absolutePath).toLowerCase();
+
+    if (ext === '.ts' || ext === '.tsx') {
+        const source = fs.readFileSync(absolutePath, 'utf-8');
+        const transpiled = ts.transpileModule(source, {
+            compilerOptions: {
+                module: ts.ModuleKind.CommonJS,
+                target: ts.ScriptTarget.ES2020,
+                esModuleInterop: true,
+            },
+            fileName: absolutePath,
+        }).outputText;
+
+        const localRequire = createRequire(absolutePath);
+        const mod = { exports: {} as Record<string, unknown> };
+        const fn = new Function(
+            'require',
+            'module',
+            'exports',
+            '__filename',
+            '__dirname',
+            transpiled
+        );
+
+        fn(localRequire, mod, mod.exports, absolutePath, path.dirname(absolutePath));
+        return mod.exports;
+    }
+
+    // Prefer ESM import when possible, then fall back to CommonJS require.
+    try {
+        const loaded = await import(pathToFileURL(absolutePath).href);
+        return loaded as Record<string, unknown>;
+    } catch {
+        const localRequire = createRequire(absolutePath);
+        return localRequire(absolutePath) as Record<string, unknown>;
+    }
 }

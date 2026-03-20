@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title desc">
+  <title id="title">Polystate Architecture</title>
+  <desc id="desc">Diagram showing Polystate runtime mode and code generation mode for React and Angular.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155" />
+    </marker>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 34px Arial, sans-serif; fill: #0f172a; }
+      .label { font: 600 20px Arial, sans-serif; fill: #0f172a; }
+      .small { font: 500 17px Arial, sans-serif; fill: #1e293b; }
+      .box { rx: 18; ry: 18; stroke-width: 2.5; }
+      .source { fill: #dbeafe; stroke: #1d4ed8; }
+      .runtime { fill: #dcfce7; stroke: #15803d; }
+      .generated { fill: #ffedd5; stroke: #c2410c; }
+      .neutral { fill: #e2e8f0; stroke: #475569; }
+      .line { stroke: #334155; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .legend { font: 600 18px Arial, sans-serif; fill: #334155; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="980" />
+  <text x="60" y="70" class="title">Polystate Architecture</text>
+  <text x="60" y="105" class="small">One state model can run directly through adapters or generate native Redux and NgRx output.</text>
+
+  <rect x="70" y="160" width="280" height="90" class="box source" />
+  <text x="210" y="198" text-anchor="middle" class="label">State Source</text>
+  <text x="210" y="228" text-anchor="middle" class="small">Runtime store or</text>
+  <text x="210" y="252" text-anchor="middle" class="small">store.definition.ts</text>
+
+  <rect x="430" y="155" width="260" height="100" class="box neutral" />
+  <text x="560" y="197" text-anchor="middle" class="label">Polystate Mode</text>
+  <text x="560" y="227" text-anchor="middle" class="small">Runtime adapters</text>
+  <text x="560" y="251" text-anchor="middle" class="small">or code generation</text>
+
+  <rect x="180" y="360" width="320" height="90" class="box runtime" />
+  <text x="340" y="398" text-anchor="middle" class="label">Runtime Mode</text>
+  <text x="340" y="428" text-anchor="middle" class="small">Use @polystate/core directly</text>
+
+  <rect x="710" y="360" width="320" height="90" class="box generated" />
+  <text x="870" y="398" text-anchor="middle" class="label">Code Generation Mode</text>
+  <text x="870" y="428" text-anchor="middle" class="small">Generate framework-native code</text>
+
+  <rect x="80" y="540" width="280" height="96" class="box source" />
+  <text x="220" y="578" text-anchor="middle" class="label">@polystate/core</text>
+  <text x="220" y="608" text-anchor="middle" class="small">createStore</text>
+  <text x="220" y="632" text-anchor="middle" class="small">immutable actions and state</text>
+
+  <rect x="400" y="540" width="240" height="96" class="box runtime" />
+  <text x="520" y="578" text-anchor="middle" class="label">React Runtime</text>
+  <text x="520" y="608" text-anchor="middle" class="small">useStore</text>
+  <text x="520" y="632" text-anchor="middle" class="small">useSelector useDispatch</text>
+
+  <rect x="680" y="540" width="240" height="96" class="box runtime" />
+  <text x="800" y="578" text-anchor="middle" class="label">Angular Runtime</text>
+  <text x="800" y="608" text-anchor="middle" class="small">PolystateService</text>
+  <text x="800" y="632" text-anchor="middle" class="small">select and select$</text>
+
+  <rect x="1030" y="540" width="220" height="96" class="box generated" />
+  <text x="1140" y="578" text-anchor="middle" class="label">CLI</text>
+  <text x="1140" y="608" text-anchor="middle" class="small">polystate generate</text>
+  <text x="1140" y="632" text-anchor="middle" class="small">validate and write files</text>
+
+  <rect x="1290" y="510" width="240" height="96" class="box generated" />
+  <text x="1410" y="548" text-anchor="middle" class="label">generator-react</text>
+  <text x="1410" y="578" text-anchor="middle" class="small">Redux store</text>
+  <text x="1410" y="602" text-anchor="middle" class="small">hooks selectors types</text>
+
+  <rect x="1290" y="650" width="240" height="96" class="box generated" />
+  <text x="1410" y="688" text-anchor="middle" class="label">generator-angular</text>
+  <text x="1410" y="718" text-anchor="middle" class="small">NgRx actions reducer</text>
+  <text x="1410" y="742" text-anchor="middle" class="small">selectors facade module</text>
+
+  <rect x="380" y="780" width="250" height="90" class="box runtime" />
+  <text x="505" y="818" text-anchor="middle" class="label">React UI</text>
+  <text x="505" y="848" text-anchor="middle" class="small">Components subscribe and dispatch</text>
+
+  <rect x="670" y="780" width="250" height="90" class="box runtime" />
+  <text x="795" y="818" text-anchor="middle" class="label">Angular UI</text>
+  <text x="795" y="848" text-anchor="middle" class="small">Components bind signals and observables</text>
+
+  <rect x="1120" y="800" width="350" height="90" class="box neutral" />
+  <text x="1295" y="838" text-anchor="middle" class="label">Framework-Native Apps</text>
+  <text x="1295" y="868" text-anchor="middle" class="small">Redux in React and NgRx in Angular</text>
+
+  <path d="M350 205 L430 205" class="line" />
+  <path d="M500 255 L390 360" class="line" />
+  <path d="M620 255 L790 360" class="line" />
+  <path d="M340 450 L220 540" class="line" />
+  <path d="M340 450 L520 540" class="line" />
+  <path d="M340 450 L800 540" class="line" />
+  <path d="M870 450 L1140 540" class="line" />
+  <path d="M1250 588 L1290 558" class="line" />
+  <path d="M1250 588 L1290 698" class="line" />
+  <path d="M520 636 L505 780" class="line" />
+  <path d="M800 636 L795 780" class="line" />
+  <path d="M1410 606 L1295 800" class="line" />
+  <path d="M1410 746 L1295 800" class="line" />
+
+  <rect x="60" y="910" width="28" height="28" class="source" />
+  <text x="100" y="930" class="legend">Source of truth</text>
+  <rect x="280" y="910" width="28" height="28" class="runtime" />
+  <text x="320" y="930" class="legend">Runtime adapters</text>
+  <rect x="520" y="910" width="28" height="28" class="generated" />
+  <text x="560" y="930" class="legend">Generated framework code</text>
+  <rect x="850" y="910" width="28" height="28" class="neutral" />
+  <text x="890" y="930" class="legend">Integration point</text>
+</svg>

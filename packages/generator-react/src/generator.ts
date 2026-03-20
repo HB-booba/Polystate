@@ -137,7 +137,7 @@ export function generateHooks(definition: StoreDefinition): string {
  */
 
 import { useDispatch, useSelector as useReduxSelector, TypedUseSelectorHook } from 'react-redux';
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import type { RootState, AppDispatch } from './store';
 import {
 ${extractActions(definition)
@@ -357,7 +357,7 @@ function replacePayloadParam(src: string, paramName: string): string {
   );
   // Replace all remaining standalone occurrences (negative lookbehind for ".")
   result = result.replace(
-    new RegExp(`(?<!\\.)\\b${paramName}\\b`, 'g'),
+    new RegExp(`(?<!\\.)\\b${paramName}\\b(?!\\s*:)`, 'g'),
     'action.payload'
   );
   return result;
@@ -509,17 +509,37 @@ function generateDispatchHooks(definition: StoreDefinition): string {
 
 function generateSelectorHooks(definition: StoreDefinition): string {
   const { name } = definition;
-  const storeName = capitalize(name);
-
-  return Object.keys(definition.initialState)
+  const baseHooks = Object.keys(definition.initialState)
     .map((key) => {
-      const selectorName = `select${capitalize(key)}`;
       const hookName = `use${capitalize(key)}`;
       return `export function ${hookName}() {
   return useSelector((state) => state.${name}.${key});
 }`;
     })
     .join('\n\n');
+
+  const hasTodos = Object.prototype.hasOwnProperty.call(definition.initialState, 'todos');
+  const hasFilter = Object.prototype.hasOwnProperty.call(definition.initialState, 'filter');
+
+  if (hasTodos && hasFilter) {
+    const derivedHooks = `export function useFilteredTodos() {
+  const todos = useTodos() as any[];
+  const filter = useFilter() as string;
+
+  if (filter === 'active') return todos.filter((todo: any) => !todo.done);
+  if (filter === 'completed') return todos.filter((todo: any) => !!todo.done);
+  return todos;
+}
+
+export function useActiveTodoCount() {
+  const todos = useTodos() as any[];
+  return todos.filter((todo: any) => !todo.done).length;
+}`;
+
+    return `${baseHooks}\n\n${derivedHooks}`;
+  }
+
+  return baseHooks;
 }
 
 function generateActionTypes(definition: StoreDefinition): string {

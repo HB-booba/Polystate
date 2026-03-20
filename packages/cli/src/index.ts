@@ -3,4 +3,6 @@
  * Command-line tool for Polystate code generation
  */
 
-export { default as CLI } from './cli';
+// CLI package is command-oriented and does not expose a programmatic API yet.
+export { };
+

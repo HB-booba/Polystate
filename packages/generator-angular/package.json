@@ -17,9 +17,9 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap",
     "test": "vitest",
-    "dev": "tsup --watch"
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch"
   },
   "keywords": [
     "polystate",

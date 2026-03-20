@@ -47,3 +47,6 @@ examples/*/.angular
 .turbo
 .changeset
 polystate.zip
+
+# nx
+.nx/
