@@ -4,11 +4,11 @@ import { useCallback, useSyncExternalStore } from 'react';
 /**
  * Subscribes to the entire store state using React's useSyncExternalStore.
  * Ensures proper synchronization between store updates and React rendering.
- * 
+ *
  * @template T - The store state type
  * @param store - The Polystate store
  * @returns The current state
- * 
+ *
  * @example
  * ```typescript
  * function MyComponent() {
@@ -18,23 +18,23 @@ import { useCallback, useSyncExternalStore } from 'react';
  * ```
  */
 export function useStore<T>(store: Store<T>): T {
-    return useSyncExternalStore(
-        (listener) => store.subscribe(listener),
-        () => store.getState(),
-        () => store.getState()
-    );
+  return useSyncExternalStore(
+    (listener) => store.subscribe(listener),
+    () => store.getState(),
+    () => store.getState()
+  );
 }
 
 /**
  * Selects a slice of the store state using a selector function.
  * Only triggers re-renders when the selected value changes.
- * 
+ *
  * @template T - The store state type
  * @template S - The selected value type
  * @param store - The Polystate store
  * @param selector - Function to select a slice of state
  * @returns The selected state slice
- * 
+ *
  * @example
  * ```typescript
  * function TodoList() {
@@ -44,21 +44,21 @@ export function useStore<T>(store: Store<T>): T {
  * ```
  */
 export function useSelector<T, S>(store: Store<T>, selector: Selector<T, S>): S {
-    return useSyncExternalStore(
-        (listener) => store.subscribe(selector, () => listener()),
-        () => store.getState(selector),
-        () => store.getState(selector)
-    );
+  return useSyncExternalStore(
+    (listener) => store.subscribe(selector, () => listener()),
+    () => store.getState(selector),
+    () => store.getState(selector)
+  );
 }
 
 /**
  * Dispatches actions to the store.
  * Returns memoized dispatch functions bound to the store.
- * 
+ *
  * @template T - The store state type
  * @param store - The Polystate store
  * @returns Object with dispatch function
- * 
+ *
  * @example
  * ```typescript
  * function Counter() {
@@ -68,27 +68,27 @@ export function useSelector<T, S>(store: Store<T>, selector: Selector<T, S>): S 
  * ```
  */
 export function useDispatch<T>(store: Store<T>) {
-    const dispatch = useCallback(
-        (action: string, payload?: unknown) => store.dispatch(action, payload),
-        [store]
-    );
+  const dispatch = useCallback(
+    (action: string, payload?: unknown) => store.dispatch(action, payload),
+    [store]
+  );
 
-    return { dispatch };
+  return { dispatch };
 }
 
 /**
  * Sets state with a partial update.
  * Provides a convenient way to update state without defining actions.
- * 
+ *
  * @template T - The store state type
  * @param store - The Polystate store
  * @returns Function to update state
- * 
+ *
  * @example
  * ```typescript
  * function UserForm() {
  *   const setState = useSetState(store);
- *   
+ *
  *   const handleNameChange = (name: string) => {
  *     setState({ name });
  *   };
@@ -96,20 +96,17 @@ export function useDispatch<T>(store: Store<T>) {
  * ```
  */
 export function useSetState<T>(store: Store<T>) {
-    return useCallback(
-        (patch: Partial<T>) => store.setState(patch),
-        [store]
-    );
+  return useCallback((patch: Partial<T>) => store.setState(patch), [store]);
 }
 
 /**
  * Factory function to create pre-bound hooks for a specific store.
  * Useful for avoiding repeated store prop passing.
- * 
+ *
  * @template T - The store state type
  * @param store - The Polystate store
  * @returns Object with bound hook functions
- * 
+ *
  * @example
  * ```typescript
  * const todoStore = createStore({ todos: [] }, ...);
@@ -119,7 +116,7 @@ export function useSetState<T>(store: Store<T>) {
  *   useDispatch: useTodoDispatch,
  *   useSetState: useTodoSetState,
  * } = createStoreHooks(todoStore);
- * 
+ *
  * // In components:
  * function TodoList() {
  *   const todos = useTodoSelector((state) => state.todos);
@@ -127,10 +124,10 @@ export function useSetState<T>(store: Store<T>) {
  * ```
  */
 export function createStoreHooks<T>(store: Store<T>) {
-    return {
-        useStore: () => useStore(store),
-        useSelector: <S,>(selector: Selector<T, S>) => useSelector(store, selector),
-        useDispatch: () => useDispatch(store),
-        useSetState: () => useSetState(store),
-    };
+  return {
+    useStore: () => useStore(store),
+    useSelector: <S>(selector: Selector<T, S>) => useSelector(store, selector),
+    useDispatch: () => useDispatch(store),
+    useSetState: () => useSetState(store),
+  };
 }
