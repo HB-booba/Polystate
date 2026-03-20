@@ -170,6 +170,69 @@ program
         }
     });
 
+program
+    .command('check <definitionFile>')
+    .description('Check if generated files are up-to-date with the definition')
+    .option('--store-dir <path>', 'Directory containing generated store files', 'src/store')
+    .option('--react', 'Check React generated files')
+    .option('--angular', 'Check Angular generated files')
+    .action(async (definitionFile: string, options: any) => {
+        const absoluteDefPath = path.resolve(process.cwd(), definitionFile);
+
+        if (!fs.existsSync(absoluteDefPath)) {
+            console.error(`❌ Definition file not found: ${absoluteDefPath}`);
+            process.exit(1);
+        }
+
+        const storeDir = path.resolve(process.cwd(), options.storeDir || 'src/store');
+        const defMtime = fs.statSync(absoluteDefPath).mtimeMs;
+
+        console.log(`🔍 Checking generated files in: ${storeDir}`);
+        console.log(`📄 Definition: ${absoluteDefPath}`);
+        console.log(`   Modified: ${new Date(defMtime).toLocaleString()}\n`);
+
+        const checkReact = options.react || (!options.angular);
+        const checkAngular = options.angular;
+
+        const reactFiles = ['store.ts', 'hooks.ts', 'types.ts'];
+        const angularFiles = ['state.ts', 'actions.ts', 'reducer.ts', 'selectors.ts', 'facade.ts', 'effects.ts'];
+
+        const filesToCheck = [
+            ...(checkReact ? reactFiles : []),
+            ...(checkAngular ? angularFiles : []),
+        ];
+
+        let stale = false;
+        let missing = false;
+
+        for (const file of filesToCheck) {
+            const filePath = path.join(storeDir, file);
+            if (!fs.existsSync(filePath)) {
+                console.log(`  ❓ ${file} — not found (run polystate generate)`);
+                missing = true;
+                continue;
+            }
+            const fileMtime = fs.statSync(filePath).mtimeMs;
+            const isStale = fileMtime < defMtime;
+            const ageLabel = isStale
+                ? `${Math.round((defMtime - fileMtime) / 1000)}s older than definition`
+                : 'up-to-date';
+            console.log(`  ${isStale ? '⚠️ ' : '✅'} ${file} — ${ageLabel}`);
+            if (isStale) stale = true;
+        }
+
+        console.log('');
+        if (missing) {
+            console.error('❌ Some generated files are missing. Run: polystate generate');
+            process.exit(2);
+        } else if (stale) {
+            console.warn('⚠️  Some generated files are stale. Run: polystate generate --overwrite');
+            process.exit(1);
+        } else {
+            console.log('✅ All generated files are up-to-date.');
+        }
+    });
+
 program.parse(process.argv);
 
 // ============================================================================
