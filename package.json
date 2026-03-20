@@ -16,7 +16,7 @@
     "changeset": "changeset",
     "version": "changeset version",
     "publish": "changeset publish",
-    "release": "pnpm build && node scripts/pre-publish-check.mjs && changeset publish",
+    "release": "node scripts/release.mjs",
     "fix-workspace-deps": "node scripts/fix-workspace-deps.mjs",
     "restore-workspace-deps": "node scripts/fix-workspace-deps.mjs --restore"
   },
@@ -24,6 +24,7 @@
     "@angular/core": "^17.3.12",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.27.1",
     "@nx/angular": "^18.0.0",
     "@nx/devkit": "^18.0.0",

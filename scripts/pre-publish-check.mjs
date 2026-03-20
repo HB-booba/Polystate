@@ -24,10 +24,12 @@ const PACKAGES_DIR = path.join(ROOT, 'packages');
 const REQUIRED_FIELDS = ['name', 'version', 'description', 'license'];
 
 let allOk = true;
+let errorCount = 0;
 
 function fail(msg) {
     console.error(`  ❌ ${msg}`);
     allOk = false;
+    errorCount += 1;
 }
 
 function warn(msg) {
@@ -35,6 +37,7 @@ function warn(msg) {
 }
 
 function checkPackage(dir) {
+    const startErrorCount = errorCount;
     const pkgPath = path.join(PACKAGES_DIR, dir, 'package.json');
     if (!fs.existsSync(pkgPath)) return;
 
@@ -92,7 +95,11 @@ function checkPackage(dir) {
         warn('"publishConfig.access" not set. Scoped packages default to private on npm.');
     }
 
-    console.log('  ✅ Ready to publish');
+    if (errorCount === startErrorCount) {
+        console.log('  ✅ Ready to publish');
+    } else {
+        console.log('  ❌ Not ready to publish');
+    }
 }
 
 for (const dir of fs.readdirSync(PACKAGES_DIR)) {
