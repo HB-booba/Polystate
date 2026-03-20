@@ -47,10 +47,12 @@ examples/
 
 ### Making Changes
 
-1. **Create a branch** from `main`:
+1. **Sync from `develop` and create your feature branch**:
 
    ```bash
-   git checkout -b feature/my-feature
+  git checkout develop
+  git pull origin develop
+  git checkout -b feature/my-feature
    ```
 
 2. **Make your changes** in the appropriate package
@@ -278,7 +280,7 @@ This creates a changeset file describing your changes. Include:
    npm run test
    npm run build
    ```
-3. **Create pull request** with clear description:
+3. **Create pull request to `develop`** with clear description:
 
    ```markdown
    ## Description
@@ -310,6 +312,13 @@ This creates a changeset file describing your changes. Include:
 
 4. **Address review feedback** and push updates
 5. **Wait for approval** and merge when ready
+
+## Branching Policy
+
+- Direct pushes to `main` and `develop` are not allowed for contributors.
+- Contributors must branch from `develop`.
+- Contributor pull requests must target `develop`.
+- `main` is updated only by maintainers through the release flow.
 
 ## Performance Considerations
 
