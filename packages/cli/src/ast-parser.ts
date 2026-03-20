@@ -7,7 +7,7 @@
  * old handler.toString() + regex approach could not handle correctly.
  */
 
-import type { ActionAST, FieldAST, StoreAST } from '@polystate/definition';
+import type { ActionAST, AsyncActionAST, FieldAST, StoreAST } from '@polystate/definition';
 import {
     Node,
     ObjectLiteralExpression,
@@ -93,6 +93,7 @@ function extractStoreAST(obj: ObjectLiteralExpression): StoreAST {
     const descNode = getProperty(obj, 'description');
     const initialStateNode = getProperty(obj, 'initialState');
     const actionsNode = getProperty(obj, 'actions');
+    const asyncActionsNode = getProperty(obj, 'asyncActions');
 
     if (!nameNode || !initialStateNode || !actionsNode) {
         throw new Error('StoreDefinition is missing required properties: name, initialState, actions');
@@ -113,7 +114,12 @@ function extractStoreAST(obj: ObjectLiteralExpression): StoreAST {
         ? extractActions(actionsExpr)
         : [];
 
-    return { name, description, fields, actions };
+    const asyncActionsExpr = asyncActionsNode?.getInitializer();
+    const asyncActions = asyncActionsExpr
+        ? extractAsyncActions(asyncActionsExpr)
+        : [];
+
+    return { name, description, fields, actions, asyncActions };
 }
 
 // ============================================================================
@@ -208,6 +214,70 @@ function extractAction(prop: PropertyAssignment): ActionAST {
         payloadType,
         payloadParamName,
         stateParamName,
+        handlerBody,
+    };
+}
+
+// ============================================================================
+// Async action extraction (asyncActions block)
+// ============================================================================
+
+function extractAsyncActions(node: Node): AsyncActionAST[] {
+    if (!Node.isObjectLiteralExpression(node)) return [];
+
+    return node
+        .getProperties()
+        .filter(Node.isPropertyAssignment)
+        .map((prop) => extractAsyncAction(prop as PropertyAssignment));
+}
+
+function extractAsyncAction(prop: PropertyAssignment): AsyncActionAST {
+    const actionName = prop.getName();
+    const initializer = prop.getInitializer();
+
+    if (!initializer) {
+        throw new Error(`Async action "${actionName}" has no initializer`);
+    }
+
+    const arrowFn = Node.isArrowFunction(initializer) ? initializer : null;
+    if (!arrowFn) {
+        throw new Error(
+            `Async action "${actionName}" must be an async arrow function, got ${initializer.getKindName()}`
+        );
+    }
+
+    const params = arrowFn.getParameters();
+    const payloadParam = params[0]; // async actions take optional payload as first (only) param
+
+    let payloadParamName: string | null = null;
+    let payloadType: string | null = null;
+
+    if (payloadParam) {
+        payloadParamName = payloadParam.getName();
+        const typeNode = payloadParam.getTypeNode();
+        payloadType = typeNode ? typeNode.getText() : null;
+    }
+
+    // Extract explicit return type annotation if present
+    const returnTypeNode = arrowFn.getReturnTypeNode();
+    const promiseReturnType = returnTypeNode ? returnTypeNode.getText() : null;
+    // Strip outer Promise<...> wrapper if present so we get the value type
+    let returnType: string | null = promiseReturnType;
+    if (promiseReturnType) {
+        const promiseMatch = promiseReturnType.match(/^Promise<(.+)>$/s);
+        if (promiseMatch) {
+            returnType = promiseMatch[1]!.trim();
+        }
+    }
+
+    const body = arrowFn.getBody();
+    const handlerBody = body.getText();
+
+    return {
+        name: actionName,
+        payloadType,
+        payloadParamName,
+        returnType,
         handlerBody,
     };
 }

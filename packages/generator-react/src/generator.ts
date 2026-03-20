@@ -3,7 +3,7 @@
  * Generates Redux store, actions, and hooks
  */
 
-import { ActionAST, FieldAST, StoreAST, StoreDefinition, extractActions } from '@polystate/definition';
+import { ActionAST, AsyncActionAST, FieldAST, StoreAST, StoreDefinition, extractActions } from '@polystate/definition';
 
 interface GeneratorOptions {
   overwrite?: boolean;
@@ -623,10 +623,51 @@ function fieldToSelectorHook(field: FieldAST, storeName: string): string {
 }
 
 /**
+ * Generates a createAsyncThunk call for one async action.
+ */
+function asyncActionToThunk(action: AsyncActionAST, storeName: string): string {
+  const { name, payloadType, payloadParamName, handlerBody } = action;
+  const paramList = payloadParamName && payloadType
+    ? `(${payloadParamName}: ${payloadType})`
+    : '()';
+  const typeParam = payloadType ? `<unknown, ${payloadType}>` : '';
+
+  return `export const ${name} = createAsyncThunk${typeParam}(
+  '${storeName}/${name}',
+  async ${paramList} ${handlerBody}
+);`;
+}
+
+/**
+ * Generates the extraReducers section for async thunks.
+ */
+function asyncExtraReducers(asyncActions: AsyncActionAST[]): string {
+  if (!asyncActions.length) return '';
+
+  const cases = asyncActions.flatMap((a) => [
+    `      builder.addCase(${a.name}.pending, (state) => {`,
+    `        // TODO: handle loading state (e.g. state.loading = true)`,
+    `      });`,
+    `      builder.addCase(${a.name}.fulfilled, (state, action) => {`,
+    `        // TODO: handle success — action.payload contains the resolved value`,
+    `      });`,
+    `      builder.addCase(${a.name}.rejected, (state, action) => {`,
+    `        // TODO: handle error — action.error.message contains details`,
+    `      });`,
+  ]);
+
+  return [
+    `  extraReducers: (builder) => {`,
+    ...cases,
+    `  },`,
+  ].join('\n');
+}
+
+/**
  * Generates the Redux store file from a StoreAST (typed, no `any`).
  */
 export function generateReduxStoreFromAST(ast: StoreAST): string {
-  const { name, fields, actions } = ast;
+  const { name, fields, actions, asyncActions } = ast;
   const storeName = capitalize(name);
 
   const stateFields = fields
@@ -635,7 +676,6 @@ export function generateReduxStoreFromAST(ast: StoreAST): string {
 
   const initialStateLines = fields.map((f) => {
     const val = fieldToInitialValueStr(f);
-    // inline single-line values, indent multi-line ones
     const indented = val.includes('\n')
       ? val.split('\n').map((l, i) => (i === 0 ? l : '  ' + l)).join('\n')
       : val;
@@ -653,12 +693,20 @@ export function generateReduxStoreFromAST(ast: StoreAST): string {
     })
     .join('\n\n');
 
+  const hasAsync = asyncActions.length > 0;
+  const asyncImport = hasAsync ? ', createAsyncThunk' : '';
+  const thunks = hasAsync
+    ? '\n// ============================================================================\n// Async Thunks\n// ============================================================================\n\n' +
+    asyncActions.map((a) => asyncActionToThunk(a, name)).join('\n\n') + '\n'
+    : '';
+  const extraReducers = hasAsync ? '\n' + asyncExtraReducers(asyncActions) : '';
+
   return `/**
  * Generated Redux store for ${name}
  * Do not edit manually - regenerate with: polystate generate
  */
 
-import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { configureStore, createSlice, PayloadAction${asyncImport} } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 
 // ============================================================================
@@ -682,7 +730,7 @@ const ${name}Slice = createSlice({
   initialState,
   reducers: {
 ${reducers}
-  },
+  },${extraReducers}
 });
 
 // ============================================================================
@@ -692,7 +740,7 @@ ${reducers}
 export const {
 ${actionExports}
 } = ${name}Slice.actions;
-
+${thunks}
 // ============================================================================
 // Selectors
 // ============================================================================

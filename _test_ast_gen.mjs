@@ -1,5 +1,5 @@
 import { parseDefinitionFile } from './packages/cli/src/ast-parser.js';
-import { generateReduxStoreFromAST, generateHooksFromAST } from './packages/generator-react/src/generator.js';
+import { generateHooksFromAST, generateReduxStoreFromAST } from './packages/generator-react/src/generator.js';
 
 const ast = parseDefinitionFile('/Users/abdelhakhamri/Documents/Projects/polystate/examples/react-todo-generated/store.definition.ts');
 console.log('=== StoreAST ===');

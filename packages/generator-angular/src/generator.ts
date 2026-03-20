@@ -592,3 +592,85 @@ ${actionMethods}
 }
 `;
 }
+
+/**
+ * Generates an NgRx Effects class from a StoreAST.
+ * Only emits the class when asyncActions is non-empty.
+ */
+export function generateNgRxEffectsFromAST(ast: StoreAST): string {
+    const { name, asyncActions } = ast;
+    const storeName = capitalize(name);
+
+    if (!asyncActions.length) {
+        return `/**
+ * Generated NgRx effects for ${name} store
+ * No async actions defined — this file can be deleted or filled in manually.
+ */
+
+export {};
+`;
+    }
+
+    const effects = asyncActions.map((a) => {
+        const dispatchType = a.payloadType
+            ? `ofType(${storeName}Actions.${a.name})`
+            : `ofType(${storeName}Actions.${a.name})`;
+        const switchMapParam = a.payloadParamName && a.payloadType
+            ? `({ payload: ${a.payloadParamName} })`
+            : '()';
+        const awaitBody = a.handlerBody;
+
+        return `  ${a.name}$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(${storeName}Actions.${a.name}),
+      switchMap(${switchMapParam} =>
+        from((async () => ${awaitBody})()).pipe(
+          map((result) => ${storeName}Actions.${a.name}Success({ payload: result as any })),
+          catchError((error: Error) =>
+            of(${storeName}Actions.${a.name}Failure({ error: error.message }))
+          )
+        )
+      )
+    )
+  );`;
+    });
+
+    const asyncActionDefs = asyncActions.flatMap((a) => {
+        const successPayloadType = a.returnType ?? 'unknown';
+        return [
+            `// Async lifecycle actions for ${a.name}`,
+            `export const ${a.name}Success = createAction('[${storeName}] ${a.name} Success', props<{ payload: ${successPayloadType} }>());`,
+            `export const ${a.name}Failure = createAction('[${storeName}] ${a.name} Failure', props<{ error: string }>());`,
+        ];
+    });
+
+    return `/**
+ * Generated NgRx effects for ${name} store
+ * Do not edit manually - regenerate with: polystate generate
+ */
+
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { createAction, props } from '@ngrx/store';
+import { from, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import * as ${storeName}Actions from './actions';
+
+// ============================================================================
+// Async lifecycle action creators (Success / Failure)
+// ============================================================================
+
+${asyncActionDefs.join('\n')}
+
+// ============================================================================
+// Effects class
+// ============================================================================
+
+@Injectable()
+export class ${storeName}Effects {
+${effects.join('\n\n')}
+
+  constructor(private readonly actions$: Actions) {}
+}
+`;
+}

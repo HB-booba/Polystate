@@ -12,6 +12,7 @@ import {
 import {
     generateAngularFacadeFromAST,
     generateNgRxActionsFromAST,
+    generateNgRxEffectsFromAST,
     generateNgRxReducerFromAST,
     generateNgRxSelectorsFromAST,
     generateNgRxStateFromAST,
@@ -199,6 +200,7 @@ function generateAngularCode(ast: StoreAST, outDir: string, overwrite: boolean) 
     const reducerCode = generateNgRxReducerFromAST(ast);
     const selectorsCode = generateNgRxSelectorsFromAST(ast);
     const facadeCode = generateAngularFacadeFromAST(ast);
+    const effectsCode = generateNgRxEffectsFromAST(ast);
     // generateStoreModule still uses the name string — pass a minimal object
     const moduleCode = generateStoreModule({ name: ast.name, initialState: {}, actions: {} });
 
@@ -207,6 +209,7 @@ function generateAngularCode(ast: StoreAST, outDir: string, overwrite: boolean) 
     writeFile(path.join(outDir, 'reducer.ts'), reducerCode, overwrite);
     writeFile(path.join(outDir, 'selectors.ts'), selectorsCode, overwrite);
     writeFile(path.join(outDir, 'facade.ts'), facadeCode, overwrite);
+    writeFile(path.join(outDir, 'effects.ts'), effectsCode, overwrite);
     writeFile(path.join(outDir, 'store.module.ts'), moduleCode, overwrite);
 
     console.log('   ✓ state.ts');
@@ -214,6 +217,7 @@ function generateAngularCode(ast: StoreAST, outDir: string, overwrite: boolean) 
     console.log('   ✓ reducer.ts');
     console.log('   ✓ selectors.ts');
     console.log('   ✓ facade.ts');
+    console.log('   ✓ effects.ts');
     console.log('   ✓ store.module.ts');
 }
 

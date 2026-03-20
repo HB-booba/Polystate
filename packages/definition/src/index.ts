@@ -4,7 +4,8 @@
  */
 
 export type {
-    ActionAST, ActionHandler, ActionMap, FieldAST, GenerateOptions, GenerationResult, GeneratorConfig, StoreAST, StoreDefinition,
+    ActionAST, ActionHandler, ActionMap, AsyncActionAST, AsyncActionHandler, AsyncActionMap,
+    FieldAST, GenerateOptions, GenerationResult, GeneratorConfig, StoreAST, StoreDefinition,
     ValidationResult
 } from './types';
 
