@@ -70,13 +70,8 @@ jobs:
           cache: "pnpm"
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: packages/*/dist
+      - name: Build publishable packages
+        run: pnpm nx run-many --target=build --projects=@polystate/core,@polystate/react,@polystate/angular,@polystate/definition,@polystate/devtools,@polystate/generator-react,@polystate/generator-angular,@polystate/cli
 
   publish-dry-run:
     name: Publish Dry Run
@@ -98,6 +93,9 @@ jobs:
           cache: "pnpm"
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Build publishable packages
+        run: pnpm nx run-many --target=build --projects=@polystate/core,@polystate/react,@polystate/angular,@polystate/definition,@polystate/devtools,@polystate/generator-react,@polystate/generator-angular,@polystate/cli
 
       - name: Prepare package manifests for dry run
         run: pnpm run fix-workspace-deps
@@ -137,17 +135,14 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Build publishable packages
+        run: pnpm nx run-many --target=build --projects=@polystate/core,@polystate/react,@polystate/angular,@polystate/definition,@polystate/devtools,@polystate/generator-react,@polystate/generator-angular,@polystate/cli
+
       - name: Prepare package manifests for npm publish
         run: pnpm run fix-workspace-deps
 
       - name: Verify publish readiness
         run: node scripts/pre-publish-check.mjs
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
 
       - name: Publish packages to npm
         env:
@@ -158,6 +153,10 @@ jobs:
           npm publish --workspace packages/react
           npm publish --workspace packages/angular
           npm publish --workspace packages/devtools
+
+      - name: Restore workspace manifests
+        if: always()
+        run: pnpm run restore-workspace-deps
 
       - name: Create Release
         uses: actions/create-release@v1

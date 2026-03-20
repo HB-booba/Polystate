@@ -1,5 +1,10 @@
 {
-  "changelog": ["@changesets/changelog-github", { "repo": "polystate/polystate" }],
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "polystate/polystate"
+    }
+  ],
   "commit": true,
   "fixed": [],
   "linked": [],
