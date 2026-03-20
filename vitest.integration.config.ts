@@ -27,7 +27,7 @@ export default defineConfig({
         name: 'integration',
         globals: true,
         environment: 'jsdom',
-        setupFiles: ['./vitest.setup.ts'],
+        setupFiles: [path.resolve(__dirname, 'vitest.setup.ts')],
         include: ['tests/integration/**/*.test.{ts,tsx}'],
         exclude: [...configDefaults.exclude, '**/__MACOSX/**'],
     },

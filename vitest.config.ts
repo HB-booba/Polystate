@@ -13,7 +13,7 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'jsdom',
-        setupFiles: ['./vitest.setup.ts'],
+        setupFiles: [path.resolve(__dirname, 'vitest.setup.ts')],
         exclude: [...configDefaults.exclude, '**/__MACOSX/**', 'tests/integration/**'],
         coverage: {
             provider: 'v8',

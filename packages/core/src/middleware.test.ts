@@ -101,9 +101,9 @@ describe('Middleware', () => {
     it('should return null if state not persisted', () => {
       const testStorage = {
         getItem: () => null,
-        setItem: () => {},
-        removeItem: () => {},
-        clear: () => {},
+        setItem: () => { },
+        removeItem: () => { },
+        clear: () => { },
         length: 0,
         key: () => null,
       } as Storage;
@@ -120,8 +120,8 @@ describe('Middleware', () => {
         setItem: () => {
           throw new Error('Storage error');
         },
-        removeItem: () => {},
-        clear: () => {},
+        removeItem: () => { },
+        clear: () => { },
         length: 0,
         key: () => null,
       } as Storage;
