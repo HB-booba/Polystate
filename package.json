@@ -15,7 +15,10 @@
     "dev": "nx run-many --target=dev --all --parallel",
     "changeset": "changeset",
     "version": "changeset version",
-    "publish": "changeset publish"
+    "publish": "changeset publish",
+    "release": "pnpm build && node scripts/pre-publish-check.mjs && changeset publish",
+    "fix-workspace-deps": "node scripts/fix-workspace-deps.mjs",
+    "restore-workspace-deps": "node scripts/fix-workspace-deps.mjs --restore"
   },
   "devDependencies": {
     "@angular/core": "^17.3.12",
