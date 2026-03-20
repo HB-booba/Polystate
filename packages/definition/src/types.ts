@@ -45,6 +45,68 @@ export interface ValidationResult {
     warnings: string[];
 }
 
+// ============================================================================
+// AST Types — used by the CLI AST parser and AST-based generators
+// ============================================================================
+
+/**
+ * A single field of the store's initial state with its type annotation.
+ */
+export interface FieldAST {
+    /** Property name, e.g. "todos" */
+    name: string;
+    /**
+     * TypeScript type annotation extracted from the source, e.g.
+     * "Array<{ id: number; title: string; done: boolean }>"
+     * or "'all' | 'active' | 'completed'".
+     * Null when no inline annotation is present (falls back to runtime inference).
+     */
+    typeAnnotation: string | null;
+    /** JSON-representable initial value for the field */
+    initialValue: unknown;
+}
+
+/**
+ * A single action handler extracted from the store definition source.
+ */
+export interface ActionAST {
+    /** Action name, e.g. "addTodo" */
+    name: string;
+    /**
+     * TypeScript type of the payload parameter as written in source, e.g. "number".
+     * Null when the action takes no payload.
+     */
+    payloadType: string | null;
+    /**
+     * The identifier used for the payload parameter in the original source,
+     * e.g. "id" or "title". Null when there is no payload.
+     */
+    payloadParamName: string | null;
+    /** The identifier used for the state parameter, e.g. "state". */
+    stateParamName: string;
+    /**
+     * The full text of the arrow-function body as it appears in the source
+     * (after the `=>`), e.g. `({ ...state, todos: [...state.todos, { id: Date.now(), title, done: false }] })`.
+     */
+    handlerBody: string;
+}
+
+/**
+ * Structured representation of a store definition file, produced by the
+ * ts-morph AST parser. Used by AST-based generators to emit typed code
+ * without relying on handler.toString() + regex.
+ */
+export interface StoreAST {
+    /** Store name, e.g. "todo" */
+    name: string;
+    /** Optional description */
+    description?: string;
+    /** Ordered list of initial-state fields */
+    fields: FieldAST[];
+    /** Ordered list of action handlers */
+    actions: ActionAST[];
+}
+
 /**
  * Options for code generation
  */

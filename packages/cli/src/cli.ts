@@ -6,21 +6,21 @@
  */
 
 import {
-    normalizeStoreDefinition,
     validateStoreDefinition,
+    type StoreAST
 } from '@polystate/definition';
 import {
-    generateAngularFacade,
-    generateNgRxActions,
-    generateNgRxReducer,
-    generateNgRxSelectors,
-    generateNgRxState,
+    generateAngularFacadeFromAST,
+    generateNgRxActionsFromAST,
+    generateNgRxReducerFromAST,
+    generateNgRxSelectorsFromAST,
+    generateNgRxStateFromAST,
     generateStoreModule,
 } from '@polystate/generator-angular';
 import {
-    generateHooks,
-    generateTypes as generateReactTypes,
-    generateReduxStore,
+    generateHooksFromAST,
+    generateReduxStoreFromAST,
+    generateTypesFromAST,
 } from '@polystate/generator-react';
 import { program } from 'commander';
 import * as fs from 'fs';
@@ -28,6 +28,7 @@ import { createRequire } from 'module';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { pathToFileURL } from 'url';
+import { parseDefinitionFile } from './ast-parser.js';
 
 interface GenerateOptions {
     outDir?: string;
@@ -63,32 +64,41 @@ program
                 process.exit(1);
             }
 
-            // Load the definition file
-            const moduleExports = await loadDefinitionModule(absolutePath);
-            const definition =
-                moduleExports.default || Object.values(moduleExports)[0];
+            // Parse definition file into a StoreAST using ts-morph (no code execution)
+            const ast = parseDefinitionFile(absolutePath);
 
-            if (!definition) {
-                console.error('❌ No default export or store definition found');
+            // Basic structural validation
+            if (!ast.name) {
+                console.error('❌ Definition must have a "name" property');
+                process.exit(1);
+            }
+            if (!ast.fields.length && !ast.actions.length) {
+                console.error('❌ Definition must have initialState fields and actions');
                 process.exit(1);
             }
 
-            // Validate the definition
-            console.log('✓ Validating store definition...');
-            const validation = validateStoreDefinition(definition);
+            console.log(`✓ Parsed store: "${ast.name}" (${ast.actions.length} actions, ${ast.fields.length} fields)`);
 
-            if (!validation.valid) {
-                console.error('❌ Validation errors:');
-                validation.errors.forEach((err) => console.error(`   - ${err}`));
-                process.exit(1);
+            // Also load + validate at runtime for extra checks
+            try {
+                const moduleExports = await loadDefinitionModule(absolutePath);
+                const definition = moduleExports.default || Object.values(moduleExports)[0];
+                if (definition) {
+                    const validation = validateStoreDefinition(definition as any);
+                    if (!validation.valid) {
+                        console.error('❌ Validation errors:');
+                        validation.errors.forEach((err) => console.error(`   - ${err}`));
+                        process.exit(1);
+                    }
+                    if (validation.warnings.length > 0) {
+                        console.warn('⚠️  Warnings:');
+                        validation.warnings.forEach((warn) => console.warn(`   - ${warn}`));
+                    }
+                }
+            } catch {
+                // Runtime load failed (e.g. workspace:* deps not installed) — skip runtime validation
+                console.warn('⚠️  Skipping runtime validation (could not load module)');
             }
-
-            if (validation.warnings.length > 0) {
-                console.warn('⚠️  Warnings:');
-                validation.warnings.forEach((warn) => console.warn(`   - ${warn}`));
-            }
-
-            const normalized = normalizeStoreDefinition(definition);
 
             // Determine which generators to run
             const generateReact =
@@ -100,12 +110,12 @@ program
 
             if (generateReact) {
                 console.log('\n📦 Generating React Redux code...');
-                generateReactCode(normalized, outDir, overwrite);
+                generateReactCode(ast, outDir, overwrite);
             }
 
             if (generateAngular) {
                 console.log('\n📦 Generating Angular NgRx code...');
-                generateAngularCode(normalized, outDir, overwrite);
+                generateAngularCode(ast, outDir, overwrite);
             }
 
             console.log('\n✅ Code generation complete!');
@@ -165,12 +175,12 @@ program.parse(process.argv);
 // Helper Functions
 // ============================================================================
 
-function generateReactCode(definition: any, outDir: string, overwrite: boolean) {
+function generateReactCode(ast: StoreAST, outDir: string, overwrite: boolean) {
     ensureDir(outDir);
 
-    const storeCode = generateReduxStore(definition);
-    const hooksCode = generateHooks(definition);
-    const typesCode = generateReactTypes(definition);
+    const storeCode = generateReduxStoreFromAST(ast);
+    const hooksCode = generateHooksFromAST(ast);
+    const typesCode = generateTypesFromAST(ast);
 
     writeFile(path.join(outDir, 'store.ts'), storeCode, overwrite);
     writeFile(path.join(outDir, 'hooks.ts'), hooksCode, overwrite);
@@ -181,15 +191,16 @@ function generateReactCode(definition: any, outDir: string, overwrite: boolean) 
     console.log('   ✓ types.ts');
 }
 
-function generateAngularCode(definition: any, outDir: string, overwrite: boolean) {
+function generateAngularCode(ast: StoreAST, outDir: string, overwrite: boolean) {
     ensureDir(outDir);
 
-    const stateCode = generateNgRxState(definition);
-    const actionsCode = generateNgRxActions(definition);
-    const reducerCode = generateNgRxReducer(definition);
-    const selectorsCode = generateNgRxSelectors(definition);
-    const facadeCode = generateAngularFacade(definition);
-    const moduleCode = generateStoreModule(definition);
+    const stateCode = generateNgRxStateFromAST(ast);
+    const actionsCode = generateNgRxActionsFromAST(ast);
+    const reducerCode = generateNgRxReducerFromAST(ast);
+    const selectorsCode = generateNgRxSelectorsFromAST(ast);
+    const facadeCode = generateAngularFacadeFromAST(ast);
+    // generateStoreModule still uses the name string — pass a minimal object
+    const moduleCode = generateStoreModule({ name: ast.name, initialState: {}, actions: {} });
 
     writeFile(path.join(outDir, 'state.ts'), stateCode, overwrite);
     writeFile(path.join(outDir, 'actions.ts'), actionsCode, overwrite);

@@ -4,9 +4,6 @@
  */
 
 export {
-    generateAngularFacade, generateNgRxActions,
-    generateNgRxReducer,
-    generateNgRxSelectors,
-    generateNgRxState, generateStoreModule
+    generateAngularFacade, generateAngularFacadeFromAST, generateNgRxActions, generateNgRxActionsFromAST, generateNgRxReducer, generateNgRxReducerFromAST, generateNgRxSelectors, generateNgRxSelectorsFromAST, generateNgRxState, generateNgRxStateFromAST, generateStoreModule
 } from './generator';
 

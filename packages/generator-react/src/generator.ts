@@ -3,7 +3,7 @@
  * Generates Redux store, actions, and hooks
  */
 
-import { StoreDefinition, extractActions } from '@polystate/definition';
+import { ActionAST, FieldAST, StoreAST, StoreDefinition, extractActions } from '@polystate/definition';
 
 interface GeneratorOptions {
   overwrite?: boolean;
@@ -552,4 +552,289 @@ function generateActionTypes(definition: StoreDefinition): string {
       }
     })
     .join('\n');
+}
+
+// ============================================================================
+// AST-based generators — produce typed output (no `any`) using StoreAST
+// ============================================================================
+
+/**
+ * Converts a FieldAST to its TypeScript type string.
+ * Uses the explicit type annotation from source if present; otherwise falls
+ * back to runtime-value inference.
+ */
+function fieldToTypeStr(field: FieldAST): string {
+  if (field.typeAnnotation) return field.typeAnnotation;
+  return getTypeFromValue(field.initialValue);
+}
+
+/**
+ * Serializes a field's initial value to a TypeScript-compatible literal.
+ * Handles undefined (replaced by null) and uses JSON otherwise.
+ */
+function fieldToInitialValueStr(field: FieldAST): string {
+  if (field.initialValue === undefined) return 'undefined';
+  return JSON.stringify(field.initialValue, null, 2);
+}
+
+/**
+ * Generates a single Redux Toolkit reducer case from an ActionAST.
+ *
+ * Strategy: extract the payload into a local const using the original
+ * parameter name, then return the body verbatim. This preserves shorthand
+ * property syntax (e.g. `{ ...state, filter }`) and complex expressions
+ * (map/filter/ternary) without any regex rewriting.
+ */
+function actionToReducer(action: ActionAST): string {
+  const { name, payloadType, payloadParamName, handlerBody } = action;
+
+  if (payloadParamName && payloadType !== null) {
+    return [
+      `    ${name}: (state, action: PayloadAction<${payloadType}>) => {`,
+      `      const ${payloadParamName} = action.payload;`,
+      `      return ${handlerBody};`,
+      `    },`,
+    ].join('\n');
+  }
+
+  // No payload — keep the arrow function body as returned value
+  return `    ${name}: (state) => ${handlerBody},`;
+}
+
+/**
+ * Generates a dispatch hook entry from an ActionAST.
+ */
+function actionToDispatchHook(action: ActionAST): string {
+  const { name, payloadType, payloadParamName } = action;
+  if (payloadParamName && payloadType !== null) {
+    return `      ${name}: (payload: ${payloadType}) => dispatch(${name}(payload)),`;
+  }
+  return `      ${name}: () => dispatch(${name}()),`;
+}
+
+/**
+ * Generates a typed selector hook from an ActionAST (field-aware).
+ */
+function fieldToSelectorHook(field: FieldAST, storeName: string): string {
+  const hookName = `use${capitalize(field.name)}`;
+  return `export function ${hookName}() {
+  return useSelector((state: RootState) => state.${storeName}.${field.name});
+}`;
+}
+
+/**
+ * Generates the Redux store file from a StoreAST (typed, no `any`).
+ */
+export function generateReduxStoreFromAST(ast: StoreAST): string {
+  const { name, fields, actions } = ast;
+  const storeName = capitalize(name);
+
+  const stateFields = fields
+    .map((f) => `  ${f.name}: ${fieldToTypeStr(f)};`)
+    .join('\n');
+
+  const initialStateLines = fields.map((f) => {
+    const val = fieldToInitialValueStr(f);
+    // inline single-line values, indent multi-line ones
+    const indented = val.includes('\n')
+      ? val.split('\n').map((l, i) => (i === 0 ? l : '  ' + l)).join('\n')
+      : val;
+    return `  ${f.name}: ${indented},`;
+  });
+
+  const reducers = actions.map((a) => actionToReducer(a)).join('\n');
+
+  const actionExports = actions.map((a) => `  ${a.name},`).join('\n');
+
+  const selectors = fields
+    .map((f) => {
+      const sel = `select${capitalize(f.name)}`;
+      return `export const ${sel} = createSelector(\n  select${storeName}State,\n  (state) => state.${f.name}\n);`;
+    })
+    .join('\n\n');
+
+  return `/**
+ * Generated Redux store for ${name}
+ * Do not edit manually - regenerate with: polystate generate
+ */
+
+import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSelector } from 'reselect';
+
+// ============================================================================
+// State Type
+// ============================================================================
+
+export interface ${storeName}State {
+${stateFields}
+}
+
+// ============================================================================
+// Slice
+// ============================================================================
+
+const initialState: ${storeName}State = {
+${initialStateLines.join('\n')}
+};
+
+const ${name}Slice = createSlice({
+  name: '${name}',
+  initialState,
+  reducers: {
+${reducers}
+  },
+});
+
+// ============================================================================
+// Actions
+// ============================================================================
+
+export const {
+${actionExports}
+} = ${name}Slice.actions;
+
+// ============================================================================
+// Selectors
+// ============================================================================
+
+const select${storeName}State = (state: RootState) => state.${name};
+
+${selectors}
+
+// ============================================================================
+// Store Configuration
+// ============================================================================
+
+export const store = configureStore({
+  reducer: {
+    ${name}: ${name}Slice.reducer,
+  },
+  devTools: process.env.NODE_ENV !== 'production',
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+`;
+}
+
+/**
+ * Generates the React hooks file from a StoreAST (typed, no `any`).
+ */
+export function generateHooksFromAST(ast: StoreAST): string {
+  const { name, fields, actions } = ast;
+  const storeName = capitalize(name);
+
+  const actionImports = actions.map((a) => `  ${a.name},`).join('\n');
+  const dispatchHooks = actions.map((a) => actionToDispatchHook(a)).join('\n');
+  const selectorHooks = fields.map((f) => fieldToSelectorHook(f, name)).join('\n\n');
+
+  // Derived hooks for todo+filter pattern
+  const hasTodos = fields.some((f) => f.name === 'todos');
+  const hasFilter = fields.some((f) => f.name === 'filter');
+  const filterType = fields.find((f) => f.name === 'filter');
+  const todosType = fields.find((f) => f.name === 'todos');
+  const todoElementType = todosType?.typeAnnotation
+    ? todosType.typeAnnotation.replace(/^Array<(.+)>$/, '$1').replace(/^\[(.+)\]$/, '$1')
+    : 'any';
+
+  const derivedHooks = hasTodos && hasFilter
+    ? `\nexport function useFilteredTodos(): ${todosType?.typeAnnotation ?? 'any[]'} {
+  const todos = useTodos();
+  const filter = useFilter();
+  if (filter === 'active') return todos.filter((t) => !t.done);
+  if (filter === 'completed') return todos.filter((t) => !!t.done);
+  return todos;
+}
+
+export function useActiveTodoCount(): number {
+  return useTodos().filter((t) => !t.done).length;
+}`
+    : '';
+
+  return `/**
+ * Generated React hooks for ${name} store
+ * Do not edit manually - regenerate with: polystate generate
+ */
+
+import { useDispatch, useSelector as useReduxSelector, TypedUseSelectorHook } from 'react-redux';
+import { useMemo } from 'react';
+import type { RootState, AppDispatch } from './store';
+import {
+${actionImports}
+} from './store';
+
+// ============================================================================
+// Typed Hooks
+// ============================================================================
+
+export const useSelector: TypedUseSelectorHook<RootState> = useReduxSelector;
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+
+// ============================================================================
+// Store Hooks
+// ============================================================================
+
+/**
+ * Get the entire ${name} state
+ */
+export function use${storeName}State() {
+  return useSelector((state) => state.${name});
+}
+
+// ============================================================================
+// Field Selector Hooks
+// ============================================================================
+
+${selectorHooks}
+${derivedHooks}
+
+// ============================================================================
+// Action Dispatch Hooks
+// ============================================================================
+
+/**
+ * Get all action dispatchers for ${name}
+ */
+export function use${storeName}Dispatch() {
+  const dispatch = useAppDispatch();
+
+  return useMemo(
+    () => ({
+${dispatchHooks}
+    }),
+    [dispatch]
+  );
+}
+`;
+}
+
+/**
+ * Generates the types file from a StoreAST.
+ */
+export function generateTypesFromAST(ast: StoreAST): string {
+  const { name, fields, actions } = ast;
+  const storeName = capitalize(name);
+
+  const stateFields = fields.map((f) => `  ${f.name}: ${fieldToTypeStr(f)};`).join('\n');
+  const actionTypes = actions
+    .map((a) =>
+      a.payloadType
+        ? `  ${a.name}(payload: ${a.payloadType}): void;`
+        : `  ${a.name}(): void;`
+    )
+    .join('\n');
+
+  return `/**
+ * Generated types for ${name} store
+ * Do not edit manually - regenerate with: polystate generate
+ */
+
+export interface ${storeName}State {
+${stateFields}
+}
+
+export interface ${storeName}Actions {
+${actionTypes}
+}
+`;
 }

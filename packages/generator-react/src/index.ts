@@ -3,5 +3,7 @@
  * React code generator for Polystate store definitions
  */
 
-export { generateHooks, generateReduxStore, generateTypes } from './generator';
+export {
+    generateHooks, generateHooksFromAST, generateReduxStore, generateReduxStoreFromAST, generateTypes, generateTypesFromAST
+} from './generator';
 

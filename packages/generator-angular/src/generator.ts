@@ -3,7 +3,7 @@
  * Generates NgRx store, actions, reducer, effects, selectors, and facade
  */
 
-import { StoreDefinition, extractActions } from '@polystate/definition';
+import { ActionAST, FieldAST, StoreAST, StoreDefinition, extractActions } from '@polystate/definition';
 
 /**
  * Generates NgRx actions from a store definition
@@ -375,4 +375,220 @@ function generateFacadeActions(
             }
         })
         .join('\n\n');
+}
+
+// ============================================================================
+// AST-based generators — typed output (no `any`) using StoreAST
+// ============================================================================
+
+function fieldToTypeStr(field: FieldAST): string {
+    if (field.typeAnnotation) return field.typeAnnotation;
+    return getTypeFromValue(field.initialValue);
+}
+
+function fieldToInitialValueStr(field: FieldAST): string {
+    if (field.initialValue === undefined) return 'undefined';
+    return JSON.stringify(field.initialValue, null, 2);
+}
+
+/**
+ * Generates an NgRx `on(...)` handler from an ActionAST.
+ *
+ * Uses a local const to bind the payload param name, keeping the original
+ * handler body verbatim (supports map/filter/ternary without regex).
+ */
+function actionToNgRxOn(action: ActionAST, storeName: string): string {
+    const { name, payloadType, payloadParamName, handlerBody } = action;
+
+    if (payloadParamName && payloadType !== null) {
+        return [
+            `  on(${storeName}Actions.${name}, (state, { payload }) => {`,
+            `    const ${payloadParamName} = payload;`,
+            `    return ${handlerBody};`,
+            `  }),`,
+        ].join('\n');
+    }
+
+    return `  on(${storeName}Actions.${name}, (state) => ${handlerBody}),`;
+}
+
+/**
+ * Generates NgRx state interface from a StoreAST (typed, no `any`).
+ */
+export function generateNgRxStateFromAST(ast: StoreAST): string {
+    const { name, fields } = ast;
+    const storeName = capitalize(name);
+
+    const stateFields = fields
+        .map((f) => `  ${f.name}: ${fieldToTypeStr(f)};`)
+        .join('\n');
+
+    return `/**
+ * Generated NgRx state for ${name} store
+ * Do not edit manually - regenerate with: polystate generate
+ */
+
+export interface ${storeName}State {
+${stateFields}
+}
+`;
+}
+
+/**
+ * Generates NgRx actions from a StoreAST (typed props, no `any`).
+ */
+export function generateNgRxActionsFromAST(ast: StoreAST): string {
+    const { name, actions } = ast;
+    const storeName = capitalize(name);
+
+    const creators = actions
+        .map((a) => {
+            if (a.payloadType !== null) {
+                return `export const ${a.name} = createAction(
+  '[${storeName}] ${a.name}',
+  props<{ payload: ${a.payloadType} }>()
+);`;
+            }
+            return `export const ${a.name} = createAction('[${storeName}] ${a.name}');`;
+        })
+        .join('\n\n');
+
+    return `/**
+ * Generated NgRx actions for ${name} store
+ * Do not edit manually - regenerate with: polystate generate
+ */
+
+import { createAction, props } from '@ngrx/store';
+
+${creators}
+`;
+}
+
+/**
+ * Generates NgRx reducer from a StoreAST (typed, correct handler bodies).
+ */
+export function generateNgRxReducerFromAST(ast: StoreAST): string {
+    const { name, fields, actions } = ast;
+    const storeName = capitalize(name);
+
+    const initialStateLines = fields.map((f) => {
+        const val = fieldToInitialValueStr(f);
+        const indented = val.includes('\n')
+            ? val.split('\n').map((l, i) => (i === 0 ? l : '  ' + l)).join('\n')
+            : val;
+        return `  ${f.name}: ${indented},`;
+    });
+
+    const handlers = actions.map((a) => actionToNgRxOn(a, storeName)).join('\n');
+
+    return `/**
+ * Generated NgRx reducer for ${name} store
+ * Do not edit manually - regenerate with: polystate generate
+ */
+
+import { createReducer, on } from '@ngrx/store';
+import * as ${storeName}Actions from './actions';
+import { ${storeName}State } from './state';
+
+export const initialState: ${storeName}State = {
+${initialStateLines.join('\n')}
+};
+
+export const ${name}Reducer = createReducer(
+  initialState,
+${handlers}
+);
+`;
+}
+
+/**
+ * Generates NgRx selectors from a StoreAST.
+ */
+export function generateNgRxSelectorsFromAST(ast: StoreAST): string {
+    const { name, fields } = ast;
+    const storeName = capitalize(name);
+
+    const selectorFns = fields
+        .map((f) => {
+            const sel = `select${capitalize(f.name)}`;
+            return `export const ${sel} = createSelector(
+  select${storeName}State,
+  (state: ${storeName}State) => state.${f.name}
+);`;
+        })
+        .join('\n\n');
+
+    return `/**
+ * Generated NgRx selectors for ${name} store
+ * Do not edit manually - regenerate with: polystate generate
+ */
+
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { ${storeName}State } from './state';
+
+export const select${storeName}State = createFeatureSelector<${storeName}State>(
+  '${name}'
+);
+
+${selectorFns}
+`;
+}
+
+/**
+ * Generates Angular Facade Service from a StoreAST (typed actions).
+ */
+export function generateAngularFacadeFromAST(ast: StoreAST): string {
+    const { name, fields, actions } = ast;
+    const storeName = capitalize(name);
+
+    const observables = fields
+        .map((f) => {
+            return `  ${f.name}$: Observable<${fieldToTypeStr(f)}> = this.store.pipe(
+    select(from${storeName}Selectors.select${capitalize(f.name)})
+  );`;
+        })
+        .join('\n\n');
+
+    const actionMethods = actions
+        .map((a) => {
+            if (a.payloadType !== null) {
+                return `  ${a.name}(payload: ${a.payloadType}): void {
+    this.store.dispatch(${storeName}Actions.${a.name}({ payload }));
+  }`;
+            }
+            return `  ${a.name}(): void {
+    this.store.dispatch(${storeName}Actions.${a.name}());
+  }`;
+        })
+        .join('\n\n');
+
+    return `/**
+ * Generated Angular Facade Service for ${name} store
+ * Do not edit manually - regenerate with: polystate generate
+ */
+
+import { Injectable } from '@angular/core';
+import { Store, select } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import * as ${storeName}Actions from './actions';
+import * as from${storeName}Selectors from './selectors';
+import { ${storeName}State } from './state';
+
+@Injectable({ providedIn: 'root' })
+export class ${storeName}Facade {
+  // ========================================================================
+  // Selectors (as Observables)
+  // ========================================================================
+
+${observables}
+
+  constructor(private store: Store<{ ${name}: ${storeName}State }>) {}
+
+  // ========================================================================
+  // Actions (as methods)
+  // ========================================================================
+
+${actionMethods}
+}
+`;
 }
