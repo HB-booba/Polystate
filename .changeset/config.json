@@ -1,0 +1,13 @@
+{
+  "changelog": ["@changesets/changelog-github", { "repo": "polystate/polystate" }],
+  "commit": true,
+  "fixed": [],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [],
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": false
+  }
+}
