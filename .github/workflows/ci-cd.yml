@@ -50,7 +50,7 @@ jobs:
         env:
           CI: true
           NX_SKIP_NX_CACHE: true
-        run: pnpm nx run-many --target=test --all --output-style=stream -- --passWithNoTests --coverage --run
+        run: pnpm nx run-many --target=test --all --parallel=1 --output-style=stream -- --passWithNoTests --coverage --run
 
       - uses: codecov/codecov-action@v3
         with:
