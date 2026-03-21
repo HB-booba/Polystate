@@ -50,7 +50,7 @@ jobs:
 
       - uses: codecov/codecov-action@v3
         with:
-          files: ./coverage/coverage-final.json
+          files: ./packages/angular/coverage/coverage-final.json,./packages/cli/coverage/coverage-final.json,./packages/core/coverage/coverage-final.json,./packages/definition/coverage/coverage-final.json,./packages/devtools/coverage/coverage-final.json,./packages/generator-angular/coverage/coverage-final.json,./packages/generator-react/coverage/coverage-final.json,./packages/react/coverage/coverage-final.json
 
   build:
     name: Build
