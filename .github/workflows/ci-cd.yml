@@ -46,7 +46,11 @@ jobs:
           cache: "pnpm"
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run test -- --coverage --run
+      - name: Run tests with coverage
+        env:
+          CI: true
+          NX_SKIP_NX_CACHE: true
+        run: pnpm nx run-many --target=test --all --output-style=stream -- --passWithNoTests --coverage --run
 
       - uses: codecov/codecov-action@v3
         with:
