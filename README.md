@@ -16,6 +16,12 @@ npx polystate generate store.definition.ts --react --angular
 
 Creates production-ready Redux stores and NgRx stores from a single definition.
 
+For CI and team workflows, you can also verify generated files are not stale:
+
+```bash
+npx polystate check store.definition.ts --react --store-dir src/store
+```
+
 ### Mode 2: **Runtime Adapters**
 
 Use Polystate as a runtime library with framework adapters:
@@ -51,9 +57,9 @@ polystate/
 Create `store.definition.ts`:
 
 ```typescript
-import { StoreDefinition } from '@polystate/definition';
+import type { StoreDefinition } from '@polystate/definition';
 
-export const todoDefinition: StoreDefinition = {
+export default {
   name: 'todo',
   initialState: {
     todos: [] as Array<{ id: number; title: string; done: boolean }>,
@@ -72,12 +78,12 @@ export const todoDefinition: StoreDefinition = {
       ...state,
       todos: state.todos.filter((t) => t.id !== id),
     }),
-    setFilter: (state, filter: string) => ({
+    setFilter: (state, filter: 'all' | 'active' | 'completed') => ({
       ...state,
       filter,
     }),
   },
-};
+} satisfies StoreDefinition;
 ```
 
 ### Step 2: Generate Code
@@ -88,6 +94,9 @@ npm install --save-dev @polystate/cli
 
 # Generate for both React and Angular
 npx polystate generate store.definition.ts --react --angular
+
+# Check generated files are current (good for CI)
+npx polystate check store.definition.ts --react --store-dir src/store
 ```
 
 ### Step 3: Use Generated Code
@@ -175,6 +184,7 @@ src/app/store/
 ├── reducer.ts     # Reducer function
 ├── selectors.ts   # Memoized selectors
 ├── facade.ts      # Service facade
+├── effects.ts     # NgRx effects (async actions)
 └── store.module.ts # Angular module
 ```
 

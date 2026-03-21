@@ -94,10 +94,13 @@ describe('React Hooks', () => {
 
       // Change name, not count
       await store.dispatch('setName', 'Updated');
-      await waitFor(() => {
-        // Should not have re-rendered
-        expect(renderCount).toBe(initialRenderCount);
-      }, { timeout: 100 }).catch(() => {
+      await waitFor(
+        () => {
+          // Should not have re-rendered
+          expect(renderCount).toBe(initialRenderCount);
+        },
+        { timeout: 100 }
+      ).catch(() => {
         // Expected to timeout since no re-render should happen
       });
     });

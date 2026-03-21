@@ -41,6 +41,16 @@ npm install @polystate/core @polystate/angular @angular/core rxjs
 npm install --save-dev @polystate/cli @polystate/definition
 ```
 
+Validate and stale-check commands:
+
+```bash
+# Validate a definition file
+npx polystate validate store.definition.ts
+
+# Check generated files are current
+npx polystate check store.definition.ts --react --store-dir src/store
+```
+
 ## React: Simple Runtime Example
 
 This is the fastest way to get started in React.
@@ -201,9 +211,9 @@ Use this pattern when:
 Create a definition file once:
 
 ```ts
-import { StoreDefinition } from '@polystate/definition';
+import type { StoreDefinition } from '@polystate/definition';
 
-export const counterDefinition: StoreDefinition = {
+export const counterDefinition = {
   name: 'counter',
   initialState: {
     count: 0,
@@ -213,7 +223,7 @@ export const counterDefinition: StoreDefinition = {
     decrement: (state) => ({ ...state, count: state.count - 1 }),
     setCount: (state, count: number) => ({ ...state, count }),
   },
-};
+} satisfies StoreDefinition;
 ```
 
 Generate Redux code:

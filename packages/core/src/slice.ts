@@ -4,9 +4,9 @@ import type { ActionHandler, ActionMap } from './store';
  * Options for createSlice.
  * @template T - The slice state type
  */
-export interface SliceOptions<T> {
-    /** Optional name for debugging */
-    name?: string;
+export interface SliceOptions {
+  /** Optional name for debugging */
+  name?: string;
 }
 
 /**
@@ -14,26 +14,26 @@ export interface SliceOptions<T> {
  * @template T - The slice state type
  */
 export interface Slice<T> {
-    /** The initial state for this slice */
-    initialState: T;
-    /** Action handlers for this slice */
-    actions: ActionMap<T>;
-    /** Slice name for debugging */
-    name?: string;
+  /** The initial state for this slice */
+  initialState: T;
+  /** Action handlers for this slice */
+  actions: ActionMap<T>;
+  /** Slice name for debugging */
+  name?: string;
 }
 
 /**
  * Creates a slice with reducers and initial state (Redux Toolkit style).
- * 
+ *
  * Slices are useful for organizing state logic into modular, reusable chunks.
  * Each slice can be composed into a larger store.
- * 
+ *
  * @template T - The type of the slice state
  * @param initialState - The initial state for this slice
  * @param reducers - Object mapping action names to reducer functions
  * @param options - Optional configuration
  * @returns An object with initialState and actions
- * 
+ *
  * @example
  * ```typescript
  * // Create a counter slice
@@ -49,7 +49,7 @@ export interface Slice<T> {
  *   },
  *   { name: 'counter' }
  * );
- * 
+ *
  * // Use in a store
  * const store = createStore(
  *   { counter: counterSlice.initialState, todos: [] },
@@ -61,79 +61,79 @@ export interface Slice<T> {
  *     }),
  *   }
  * );
- * 
+ *
  * // Dispatch counter actions
  * store.dispatch('counter/increment');
  * store.dispatch('counter/incrementByAmount', 5);
  * ```
  */
 export function createSlice<T>(
-    initialState: T,
-    reducers: Record<string, ActionHandler<T>>,
-    options?: SliceOptions<T>
+  initialState: T,
+  reducers: Record<string, ActionHandler<T>>,
+  options?: SliceOptions
 ): Slice<T> {
-    return {
-        initialState,
-        actions: reducers,
-        name: options?.name,
-    };
+  return {
+    initialState,
+    actions: reducers,
+    name: options?.name,
+  };
 }
 
 /**
  * Prefixes action names with a given prefix, useful for namespacing slice actions.
- * 
+ *
  * @template T - The state type
  * @param actions - Action map to prefix
  * @param prefix - Prefix to add to action names
  * @returns New action map with prefixed names
- * 
+ *
  * @example
  * ```typescript
  * const counterActions = {
  *   increment: (state) => ({ ...state, count: state.count + 1 }),
  * };
- * 
+ *
  * const prefixed = prefixActions(counterActions, 'counter');
  * // Result: { 'counter/increment': (fullState, payload) => ({ ...fullState, counter: handler(fullState.counter, payload) }) }
  * ```
  */
 export function prefixActions<TSlice, TFull extends Record<string, any> = Record<string, any>>(
-    actions: ActionMap<TSlice>,
-    prefix: string
+  actions: ActionMap<TSlice>,
+  prefix: string
 ): ActionMap<TFull> {
-    const result: ActionMap<TFull> = {};
-    Object.entries(actions).forEach(([name, handler]) => {
-        result[`${prefix}/${name}`] = (fullState: TFull, payload) => ({
-            ...fullState,
-            [prefix]: handler((fullState as any)[prefix], payload),
-        });
+  const result: ActionMap<TFull> = {};
+  Object.entries(actions).forEach(([name, handler]) => {
+    result[`${prefix}/${name}`] = (fullState: TFull, payload) => ({
+      ...fullState,
+      [prefix]: handler((fullState as any)[prefix], payload),
     });
-    return result;
+  });
+  return result;
 }
 
 /**
  * Composes multiple slices into action maps that can be merged.
- * 
+ *
  * @param slices - Array of slices to compose
  * @returns Array of action maps ready to merge into a store
- * 
+ *
  * @example
  * ```typescript
  * const counterSlice = createSlice(
  *   { count: 0 },
  *   { increment: (s) => ({ ...s, count: s.count + 1 }) }
  * );
- * 
+ *
  * const todosSlice = createSlice(
  *   { todos: [] },
  *   { addTodo: (s, title) => ({ ...s, todos: [...s.todos, title] }) }
  * );
- * 
+ *
  * const [counterState, todoState] = composeSlices([
  *   counterSlice,
  *   todosSlice,
  * ]);
- * 
+ *
  * // Now merge into store
  * const store = createStore(
  *   { ...counterState.initialState, ...todosState.initialState },
@@ -142,10 +142,10 @@ export function prefixActions<TSlice, TFull extends Record<string, any> = Record
  * ```
  */
 export function composeSlices<T extends Slice<any>>(
-    slices: T[]
+  slices: T[]
 ): Array<{ initialState: any; actions: ActionMap<any> }> {
-    return slices.map((slice) => ({
-        initialState: slice.initialState,
-        actions: slice.actions,
-    }));
+  return slices.map((slice) => ({
+    initialState: slice.initialState,
+    actions: slice.actions,
+  }));
 }

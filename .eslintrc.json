@@ -1,7 +1,12 @@
 {
   "root": true,
   "ignorePatterns": [
-    "**/*"
+    "node_modules/",
+    "dist/",
+    "build/",
+    "coverage/",
+    ".nx/",
+    "examples/*/dist/"
   ],
   "overrides": [
     {

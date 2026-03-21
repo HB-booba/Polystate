@@ -1,7 +1,7 @@
 /**
  * @polystate/core
  * Framework-agnostic state management core - zero dependencies
- * 
+ *
  * @packageDocumentation
  */
 
@@ -11,9 +11,13 @@ export { Signal } from './signal';
 // Store and types
 export { Store, createStore } from './store';
 export type {
-    ActionHandler,
-    ActionMap,
-    Selector, StoreOptions, Subscriber, ThunkAction, Unsubscriber
+  ActionHandler,
+  ActionMap,
+  Selector,
+  StoreOptions,
+  Subscriber,
+  ThunkAction,
+  Unsubscriber,
 } from './store';
 
 // Slices
@@ -22,13 +26,14 @@ export type { Slice, SliceOptions } from './slice';
 
 // Middleware
 export {
-    devToolsMiddleware, loadPersistedState, loggerMiddleware, persistMiddleware, thunkMiddleware
+  devToolsMiddleware,
+  loadPersistedState,
+  loggerMiddleware,
+  persistMiddleware,
+  thunkMiddleware,
 } from './middleware';
 export type { Middleware, MiddlewareContext } from './middleware';
 
 // RxJS compatibility
-export {
-    asObservable, distinctUntilChanged, filter, map, pipe, take
-} from './observable';
+export { asObservable, distinctUntilChanged, filter, map, pipe, take } from './observable';
 export type { Observable, Observer, Subscription } from './observable';
-

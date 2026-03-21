@@ -13,7 +13,7 @@ npm install --save-dev @polystate/cli
 Or use directly with npx:
 
 ```bash
-npx @polystate/cli generate store.definition.ts
+npx @polystate/cli generate store.definition.ts --react
 ```
 
 ## Usage
@@ -21,8 +21,11 @@ npx @polystate/cli generate store.definition.ts
 ### Generate Code
 
 ```bash
-# Generate both React and Angular (default)
+# Generate React (default)
 npx polystate generate store.definition.ts
+
+# Generate both React and Angular
+npx polystate generate store.definition.ts --both
 
 # Generate React only
 npx polystate generate store.definition.ts --react
@@ -35,6 +38,9 @@ npx polystate generate store.definition.ts --out-dir src/store
 
 # Overwrite existing files
 npx polystate generate store.definition.ts --overwrite
+
+# Check generated files are up-to-date (exit code: 0=ok, 1=stale, 2=missing)
+npx polystate check store.definition.ts --react --store-dir src/store
 ```
 
 ### Validate Definition
@@ -98,6 +104,7 @@ src/store/
 ├── reducer.ts        # Reducer function
 ├── selectors.ts      # Memoized selectors
 ├── facade.ts         # Service facade
+├── effects.ts        # NgRx effects (async actions)
 └── store.module.ts   # Angular module
 ```
 
