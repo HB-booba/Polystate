@@ -1,6 +1,6 @@
 {
   "name": "@polystate/devtools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Redux DevTools Extension middleware for Polystate",
   "license": "MIT",
   "type": "module",
@@ -35,7 +35,6 @@
     "time-travel"
   ],
   "author": "Polystate Contributors",
-  "license": "MIT",
   "dependencies": {
     "@polystate/core": "workspace:*"
   },

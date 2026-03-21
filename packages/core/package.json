@@ -1,6 +1,6 @@
 {
   "name": "@polystate/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Framework-agnostic state management core - zero dependencies",
   "license": "MIT",
   "type": "module",
@@ -48,7 +48,6 @@
     "framework-agnostic"
   ],
   "author": "Polystate Contributors",
-  "license": "MIT",
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.10.0",

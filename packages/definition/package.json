@@ -1,6 +1,6 @@
 {
   "name": "@polystate/definition",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Framework-agnostic store definitions for Polystate code generation",
   "license": "MIT",
   "main": "./dist/index.js",
@@ -30,7 +30,6 @@
     "angular"
   ],
   "author": "Polystate Contributors",
-  "license": "MIT",
   "dependencies": {},
   "devDependencies": {
     "typescript": "^5.3.0",
