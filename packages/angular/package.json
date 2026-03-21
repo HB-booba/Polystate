@@ -2,6 +2,7 @@
   "name": "@polystate/angular",
   "version": "0.1.0",
   "description": "Angular 17+ services for Polystate state management",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

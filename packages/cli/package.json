@@ -2,6 +2,7 @@
   "name": "@polystate/cli",
   "version": "0.1.0",
   "description": "CLI tool for Polystate code generation",
+  "license": "MIT",
   "main": "./dist/index.js",
   "bin": {
     "polystate": "./dist/cli.js"

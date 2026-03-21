@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Framework-agnostic state management library with native React and Angular support",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "nx": "nx",
@@ -46,10 +47,17 @@
     "tsup": "^8.0.2",
     "typescript": "^5.3.3",
     "@vitest/coverage-v8": "^1.6.1",
-    "vitest": "^1.1.0"
+    "vitest": "^1.1.0",
+    "@commitlint/cli": "^18.4.4",
+    "@commitlint/config-conventional": "^18.4.4"
   },
   "workspaces": [
     "packages/*",
     "examples/*"
-  ]
+  ],
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  }
 }

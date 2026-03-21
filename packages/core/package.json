@@ -2,6 +2,7 @@
   "name": "@polystate/core",
   "version": "0.1.0",
   "description": "Framework-agnostic state management core - zero dependencies",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
