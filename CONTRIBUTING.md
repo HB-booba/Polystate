@@ -4,106 +4,165 @@ Thank you for considering contributing to Polystate! We're excited to have you h
 
 ## Getting Started
 
-### Prerequisites
+## Prerequisites
 
 - Node.js 18+
-- npm or yarn
+- pnpm (package manager)
 - macOS, Linux, or Windows with WSL
+- Git knowledge
 
-### Development Setup
+### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/polystate/polystate.git
+git clone https://github.com/HB-booba/Polystate.git
 cd polystate
 
-# Install dependencies
-npm install
+# Install dependencies with pnpm
+pnpm install
 
 # Verify setup
-npm run build
-npm run test
-npm run lint
+pnpm build
+pnpm test
+pnpm lint
 ```
+
+## Before You Start
+
+### 🚨 Important: PRs Only
+
+- **No direct pushes to `master`** — all changes require a pull request
+- **No direct pushes to `develop`** — all changes require a pull request
+- Create a feature branch from `develop` for your work
+- All CI checks must pass before your PR can be merged
+- At least one maintainer review is required
+
+### Issue-First Policy
+
+**Before starting significant work:**
+
+1. **Check existing issues** — your feature/fix may already exist
+2. **Open an issue first** for:
+   - Major features
+   - Breaking changes
+   - Architectural decisions
+   - Anything adding 100+ lines of code
+3. **Wait for initial feedback** — discuss approach with maintainers
+4. **Get approval** before implementing large changes
+
+This helps avoid wasted effort and ensures alignment with project goals.
 
 ## Development Workflow
 
-### Project Structure
+### Feature Branch Naming
+
+Use descriptive branch names:
 
 ```
-packages/
-├── core/               # Framework-agnostic core (start here for base features)
-├── react/              # React hooks and integration
-├── angular/            # Angular services and integration
-└── devtools/           # Redux DevTools Extension support
-
-examples/
-├── react-todo/         # Basic React example
-├── angular-todo/       # Basic Angular example
-├── nextjs-ssr/         # Next.js server-side rendering
-├── angular-universal/  # Angular SSR
-└── micro-frontends/    # Module Federation example
+feature/my-feature-name       # New feature
+fix/bug-description           # Bug fix
+docs/update-readme            # Documentation
+chore/upgrade-deps            # Maintenance
 ```
 
-### Making Changes
+### Making Your Changes
 
 1. **Sync from `develop` and create your feature branch**:
 
    ```bash
-  git checkout develop
-  git pull origin develop
-  git checkout -b feature/my-feature
+   git checkout develop
+   git pull origin develop
+   git checkout -b feature/my-feature
    ```
 
-2. **Make your changes** in the appropriate package
+2. **Keep scope focused** — one feature or fix per PR (no mixing concerns)
 
-3. **Write/update tests** for your changes:
+3. **Make your changes** in the appropriate package
+
+4. **Write/update tests** for your changes:
 
    ```bash
-   npm run test -- --watch
+   pnpm test -- --watch
    ```
 
-4. **Ensure code quality**:
+5. **Ensure code quality**:
 
    ```bash
-   npm run lint
-   npm run format
+   pnpm lint
+   pnpm format
    ```
 
-5. **Build to verify**:
+6. **Build to verify everything works**:
    ```bash
-   npm run build
+   pnpm build
    ```
 
-### Commit Messages
+### Conventional Commits (Enforced)
 
-We use **conventional commits** for clear, semantic versioning:
+**Every commit message MUST follow conventional commit format.** This is validated by commitlint on all PRs.
 
-```bash
-git commit -m "feat(core): add support for middleware composition
+**Format:**
+```
+type(scope): subject
 
-- Allows chaining multiple middleware into a pipeline
-- Maintains execution order and error handling
-- Closes #123"
+body (optional)
+
+footer (optional)
 ```
 
-**Types:**
-
+**Types** (required):
 - `feat`: A new feature
 - `fix`: A bug fix
-- `docs`: Documentation changes
+- `docs`: Documentation only changes
 - `style`: Code style changes (no logic)
 - `refactor`: Code refactoring (no logic)
+- `perf`: Performance improvements
 - `test`: Adding or updating tests
 - `chore`: Build, dependencies, tooling
 
-**Scopes:**
-
+**Scopes** (optional but recommended):
 - `core`: @polystate/core
 - `react`: @polystate/react
 - `angular`: @polystate/angular
 - `devtools`: @polystate/devtools
+- `cli`: @polystate/cli
+- `definition`: @polystate/definition
 - `examples`: Example applications
+
+**Examples:**
+
+```bash
+# Good - clear, concise, conventional
+git commit -m "feat(core): add middleware composition support
+
+- Allows chaining multiple middleware into a pipeline
+- Maintains execution order and error handling
+
+Closes #123"
+
+git commit -m "fix(react): prevent unnecessary re-renders with useSyncExternalStore"
+
+git commit -m "docs: update README with new examples"
+
+git commit -m "chore(deps): upgrade typescript to 5.4"
+```
+
+**❌ Bad commits:**
+```
+git commit -m "fixed stuff"
+git commit -m "Updated code"
+git commit -m "WIP"
+git commit -m "asdfgh"
+```
+
+### One Feature/Fix Per PR
+
+- **Do not mix concerns** — one PR = one fix or feature
+- **Separate bug fixes from refactoring** — different PRs
+- **Separate docs changes from code** — different PRs
+- This makes code review faster and history cleaner
+
+## Development Setup
 
 ### Testing
 
@@ -150,16 +209,16 @@ describe('Store', () => {
 
 ```bash
 # All tests
-npm run test
+pnpm test
 
 # Watch mode
-npm run test -- --watch
+pnpm test -- --watch
 
 # Specific package
-npm run test -- packages/core
+pnpm test -- packages/core
 
 # With coverage
-npm run test -- --coverage
+pnpm test -- --coverage
 ```
 
 ### Code Style
@@ -168,13 +227,13 @@ We use **Prettier** and **ESLint**:
 
 ```bash
 # Format code
-npm run format
+pnpm format
 
 # Check formatting
-npm run format:check
+pnpm format:check
 
 # Lint code
-npm run lint
+pnpm lint
 ```
 
 ### TypeScript Standards
@@ -273,52 +332,135 @@ This creates a changeset file describing your changes. Include:
 
 ## Pull Request Process
 
-1. **Update** documentation and tests as needed
-2. **Ensure** all checks pass:
-   ```bash
-   npm run lint
-   npm run test
-   npm run build
-   ```
-3. **Create pull request to `develop`** with clear description:
+### Before Submitting a PR
 
-   ```markdown
-   ## Description
+Ensure your code is ready:
 
-   Brief summary of changes
+```bash
+# 1. Run all checks locally before submitting
+pnpm lint       # Check code style
+pnpm format     # Auto-format code
+pnpm test       # Run all tests
+pnpm build      # Verify build succeeds
 
-   ## Types of Changes
+# 2. Verify git log has conventional commits
+git log --oneline develop..HEAD
+```
 
-   - [ ] Bug fix
-   - [x] New feature
-   - [ ] Breaking change
-   - [ ] Documentation
+### PR Requirements (Enforced)
 
-   ## Related Issues
+✅ **Your PR must:**
 
-   Closes #123
+- [ ] Follow **conventional commit** format (validated by commitlint)
+- [ ] Target the **`develop` branch** (not `master`)
+- [ ] Contain **one logical feature or fix** (no mixed concerns)
+- [ ] Have **clear description** of changes (use PR template)
+- [ ] Include **tests** for new functionality
+- [ ] Have **no edits to generated files** (except in `examples/*-generated/`)
+- [ ] Pass **all CI checks**:
+  - Commitlint ✅
+  - Lint (ESLint)
+  - Tests (Vitest)
+  - Build (tsup)
+  - TypeScript strict mode
 
-   ## Testing
+### Creating a Pull Request
 
-   How was this tested?
+1. **Use the PR template** (auto-filled when you create a PR)
+2. **Fill in all sections**:
+   - Description of what changed and why
+   - Type of change (feat, fix, docs, chore)
+   - Related issues
+3. **Check off the checklist** to confirm:
+   - Tests pass
+   - Conventional commit message
+   - No generated file edits
+4. **Wait for CI to pass** — you can't merge until all checks are green
+5. **Request a review** from maintainers
+6. **Address feedback** and push updates
+7. **Merge when approved** — done by maintainers
 
-   ## Checklist
+### Merge Requirements
 
-   - [x] Tests added/updated
-   - [x] Documentation updated
-   - [x] Linting passes
-   - [x] TypeScript strict mode verified
-   ```
+A PR can be merged only when:
 
-4. **Address review feedback** and push updates
-5. **Wait for approval** and merge when ready
+- ✅ Conventional commits validated
+- ✅ All CI checks pass (lint, test, build)
+- ✅ At least one maintainer approval
+- ✅ No requested changes
+- ✅ Branch is up to date with `develop`
 
-## Branching Policy
+### Branch Policy
 
-- Direct pushes to `main` and `develop` are not allowed for contributors.
-- Contributors must branch from `develop`.
-- Contributor pull requests must target `develop`.
-- `main` is updated only by maintainers through the release flow.
+- **No direct pushes** to `master` or `develop`
+- **Contributors** must branch from `develop`
+- **Pull requests** must target `develop`
+- **`master`** is updated only by maintainers during releases
+
+## CI/Validation Checks
+
+All pull requests are automatically validated:
+
+### Commitlint
+
+- Validates each commit follows **conventional commit format**
+- Run locally: `pnpm commitlint -- --from develop`
+- **Failing this = PR can't be merged**
+
+### ESLint
+
+- Checks code style and quality
+- Run locally: `pnpm lint`
+
+### Vitest
+
+- Runs all unit tests
+- Run locally: `pnpm test`
+
+### Build
+
+- Verifies all packages build successfully (tsup)
+- Run locally: `pnpm build`
+
+### TypeScript
+
+- Strict mode validation across all packages
+- Run locally: `npx tsc --noEmit`
+
+## Reporting Issues
+
+### Submitting Bug Reports
+
+Use the **bug report template** (auto-filled when creating an issue):
+
+Include:
+
+- ✅ Minimal reproduction example
+- ✅ Expected vs actual behavior
+- ✅ Environment (Node version, OS, pnpm version)
+- ✅ Error message and full stack trace
+- ✅ Polystate version(s) affected
+
+**Don't:**
+- ❌ Report security issues publicly — email maintainers instead
+- ❌ Use issues for support questions — use Discussions
+
+### Submitting Feature Requests
+
+Use the **feature request template**:
+
+Describe:
+
+- ✅ Use case and motivation
+- ✅ Proposed API / approach
+- ✅ Example usage code
+- ✅ Any known alternatives or concerns
+
+## Getting Help
+
+- **Questions?** Use [GitHub Discussions](https://github.com/HB-booba/Polystate/discussions)
+- **Bug or feature?** Use [GitHub Issues](https://github.com/HB-booba/Polystate/issues)
+- **Want to contribute?** See this guide and submit a PR
 
 ## Performance Considerations
 
@@ -333,7 +475,7 @@ Target bundle sizes (gzipped):
 **Monitor with:**
 
 ```bash
-npm run build -- --analyze
+pnpm build
 ```
 
 ### Optimization Tips
@@ -343,53 +485,6 @@ npm run build -- --analyze
 - Minimize generated code
 - Lazy-load when possible
 - Profile before optimizing
-
-## Reporting Issues
-
-### Bug Reports
-
-Include:
-
-- Minimal reproduction example
-- Expected vs actual behavior
-- Environment (Node version, OS, etc.)
-- Error message and stack trace
-- Polystate version
-
-### Feature Requests
-
-Describe:
-
-- Use case and motivation
-- Proposed API
-- Examples of usage
-- Any concerns or edge cases
-
-## Asking Questions
-
-- **GitHub Discussions** for questions and ideas
-- **GitHub Issues** for bugs and feature requests
-- **Pull Requests** for direct contributions
-
-## Release Process
-
-Releases happen automatically via GitHub Actions when merging to `main`:
-
-1. Changesets are processed
-2. Versions are bumped (semantic versioning)
-3. CHANGELOG is updated
-4. Packages are published to npm
-5. Release notes are created on GitHub
-
-### Manual Release (if needed)
-
-```bash
-# Create versions from changesets
-npm run version
-
-# Publish to npm
-npm run publish
-```
 
 ## Code of Conduct
 

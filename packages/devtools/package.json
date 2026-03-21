@@ -2,6 +2,7 @@
   "name": "@polystate/devtools",
   "version": "0.1.0",
   "description": "Redux DevTools Extension middleware for Polystate",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
