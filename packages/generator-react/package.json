@@ -1,6 +1,6 @@
 {
   "name": "@polystate/generator-react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React Redux code generator for Polystate store definitions",
   "license": "MIT",
   "main": "./dist/index.js",
@@ -29,7 +29,6 @@
     "redux"
   ],
   "author": "Polystate Contributors",
-  "license": "MIT",
   "dependencies": {
     "@polystate/definition": "workspace:*"
   },

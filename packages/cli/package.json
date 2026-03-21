@@ -1,6 +1,6 @@
 {
   "name": "@polystate/cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI tool for Polystate code generation",
   "license": "MIT",
   "main": "./dist/index.js",
@@ -33,7 +33,6 @@
     "angular"
   ],
   "author": "Polystate Contributors",
-  "license": "MIT",
   "dependencies": {
     "@polystate/definition": "workspace:*",
     "@polystate/generator-angular": "workspace:*",

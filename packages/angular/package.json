@@ -1,6 +1,6 @@
 {
   "name": "@polystate/angular",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Angular 17+ services for Polystate state management",
   "license": "MIT",
   "type": "module",
@@ -36,7 +36,6 @@
     "observables"
   ],
   "author": "Polystate Contributors",
-  "license": "MIT",
   "dependencies": {
     "@polystate/core": "workspace:*"
   },
