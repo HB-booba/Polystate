@@ -14,7 +14,7 @@ Define your store once, generate native framework code:
 npx polystate generate store.definition.ts --react --angular
 ```
 
-Creates production-ready Redux stores and NgRx stores from a single definition.
+Generates Redux stores and NgRx stores from a single definition (requires v1.0 for full production-readiness).
 
 For CI and team workflows, you can also verify generated files are not stale:
 
@@ -372,7 +372,7 @@ function TodoItem({ todo }) {
 - ✅ Easier to debug and trace state changes
 - ✅ Single source of truth
 
-**Lines of code**: 25% less boilerplate with Polystate
+**Developer experience**: Centralized state definition, zero prop drilling
 
 ---
 
@@ -589,8 +589,8 @@ export class TodoItemComponent {
 - ✅ Cleaner service definition
 - ✅ `select$()` automatically returns Observable
 - ✅ Still uses Angular Signals when needed
-- ✅ 40% less boilerplate code
-- ✅ Type-safe action dispatching
+- ✅ Cleaner code structure
+- ✅ Strong type inference for actions
 
 ---
 
@@ -598,14 +598,14 @@ export class TodoItemComponent {
 
 | Feature            | Without State Mgmt  | Redux  | Zustand | **Polystate** |
 | ------------------ | ------------------- | ------ | ------- | ------------- |
-| Bundle Size        | N/A                 | 4.2kb  | 1.2kb   | **1.2kb**     |
+| Bundle Size (core) | N/A                 | ~290kb | ~95kb   | **~157kb**    |
 | Boilerplate        | Low (but scattered) | High   | Medium  | **Low**       |
 | Learning Curve     | Easy                | Hard   | Medium  | **Easy**      |
 | TypeScript Support | Basic               | Good   | Good    | **Excellent** |
 | React Support      | ✅                  | ✅     | ✅      | **✅**        |
 | Angular Support    | ❌                  | ❌     | ❌      | **✅**        |
 | Vanilla JS Support | ✅                  | ✅     | ✅      | **✅**        |
-| DevTools           | ❌                  | ✅     | ❌      | **✅**        |
+| DevTools           | ❌                  | ✅     | ❌      | **⚠️ (v1.0)** |
 | Async/Thunk        | Manual              | ✅     | ✅      | **✅**        |
 | Persistence        | Manual              | Plugin | ✅      | **✅**        |
 | RxJS Integration   | Manual              | No     | No      | **✅**        |
@@ -640,11 +640,12 @@ npm install @polystate/core @polystate/angular
 - `facade.ts` - Service facade
 - `store.module.ts` - Angular module
 
-All code is **production-ready** with:
+Generated code includes:
 
 - ✅ Full TypeScript support
 - ✅ Memoized selectors (reselect)
-- ✅ Built-in middleware (logger, persist, devtools)
+- ✅ Built-in middleware (logger, persist)
+- ⚠️ DevTools middleware (wiring in progress)
 - ✅ Redux DevTools integration
 - ✅ Error handling patterns
 - ✅ Auto-persistence to localStorage
@@ -978,7 +979,7 @@ Subscriptions are **automatically cleaned up** via `takeUntil(destroy$)` on `ngO
 | `subscribe + unsubscribe`              | ~5.4 M ops/sec |
 | `dispatch` with 100 global subscribers | ~225 K ops/sec |
 
-Bundle sizes (gzipped): `@polystate/core` < 1.5 KB · `@polystate/react` < 0.5 KB · `@polystate/angular` < 1 KB
+Bundle sizes (gzipped): `@polystate/core` ~2.9 KB · `@polystate/react` ~0.6 KB · `@polystate/angular` ~1.1 KB
 
 ## 🔧 Configuration
 
@@ -1020,7 +1021,7 @@ const store = createStore(
 
 | Feature        | Manual Redux       | Manual NgRx    | **Polystate Generated** |
 | -------------- | ------------------ | -------------- | ----------------------- |
-| Setup Time     | 2-3 hours          | 3-4 hours      | **5 minutes**           |
+| Setup Time     | 2-3 hours          | 3-4 hours      | **15-30 minutes**       |
 | Boilerplate    | 200+ lines         | 400+ lines     | **Auto-generated**      |
 | Selectors      | Manual memoization | createSelector | **Auto-memoized**       |
 | Middleware     | Manual setup       | Effects        | **Pre-configured**      |
@@ -1079,7 +1080,7 @@ addTodo(title) { this.facade.addTodo(title); }
 ## 🚀 Benefits
 
 ✅ **Write once, deploy to React and Angular**
-✅ **Production-ready generated code** (not wrappers)
+✅ **Generated Redux/NgRx code** (native framework code, not wrappers)
 ✅ **Zero extra dependencies** in generated code
 ✅ **Built-in best practices** (logging, persistence, devtools)
 ✅ **Faster iteration** (change definition → regenerate)
@@ -1126,9 +1127,9 @@ npm run test -- --coverage
 
 | Package            | Size (gzipped) | Size (minified) |
 | ------------------ | -------------- | --------------- |
-| @polystate/core    | 1.2kb          | 3.5kb           |
-| @polystate/react   | 0.8kb          | 2.1kb           |
-| @polystate/angular | 0.9kb          | 2.3kb           |
+| @polystate/core    | 2.9 KB         | 13 KB           |
+| @polystate/react   | 0.6 KB         | 1.6 KB          |
+| @polystate/angular | 1.1 KB         | 3.2 KB          |
 
 ## 🔐 Type Safety
 
