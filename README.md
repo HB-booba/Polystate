@@ -1232,7 +1232,6 @@ MIT
 
 - **Issues**: [GitHub Issues](https://github.com/polystate/polystate/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/polystate/polystate/discussions)
-- **Twitter**: [@polystatelib](https://twitter.com/polystatelib)
 
 ---
 
