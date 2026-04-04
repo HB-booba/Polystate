@@ -1,5 +1,5 @@
 import { Directive, OnDestroy, signal } from '@angular/core';
-import type { Selector, Store } from '@polystate/core';
+import type { ActionMap, Selector, Store } from '@polystate/core';
 import { asObservable, createStore } from '@polystate/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
@@ -27,8 +27,11 @@ import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
  * ```
  */
 @Directive()
-export abstract class PolystateService<T> implements OnDestroy {
-  protected store!: Store<T>;
+export abstract class PolystateService<
+  T,
+  A extends ActionMap<T> = ActionMap<T>,
+> implements OnDestroy {
+  protected store!: Store<T, A>;
 
   private readonly destroy$ = new Subject<void>();
   private readonly _cleanups: Array<() => void> = [];
@@ -112,8 +115,9 @@ export abstract class PolystateService<T> implements OnDestroy {
    * service.dispatch('addTodo', 'Learn Angular');
    * ```
    */
-  dispatch(action: string, payload?: unknown): Promise<void> {
-    return this.store.dispatch(action, payload);
+  dispatch(action: keyof A & string, payload?: unknown): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return this.store.dispatch(action, payload as any);
   }
 
   /** Gets the current state snapshot. */
@@ -166,11 +170,11 @@ export abstract class PolystateService<T> implements OnDestroy {
  * }
  * ```
  */
-export function createAngularService<T>(
+export function createAngularService<T, A extends ActionMap<T>>(
   initialState: T,
-  actions: Record<string, (state: T, payload?: unknown) => T>
-): new () => PolystateService<T> {
-  return class extends PolystateService<T> {
+  actions: A
+): new () => PolystateService<T, A> {
+  return class extends PolystateService<T, A> {
     constructor() {
       super();
       this.store = createStore(initialState, actions);

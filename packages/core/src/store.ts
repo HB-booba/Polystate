@@ -5,8 +5,9 @@ import { Signal } from './signal';
 /**
  * Action handler function that receives state and optional payload.
  * @template T - The store state type
+ * @template P - The payload type (defaults to `any` so specific types are inferred by callers)
  */
-export type ActionHandler<T> = (state: T, payload?: unknown) => T;
+export type ActionHandler<T, P = any> = (state: T, payload?: P) => T;
 
 /**
  * Map of action names to their handler functions.
@@ -71,6 +72,9 @@ export type ThunkAction<T = unknown> = (
  * store.dispatch('increment'); // { count: 1 }
  * ```
  */
+/** @internal Infers the payload type from an action handler for typed dispatch. */
+type DispatchPayload<F> = F extends (state: any, payload: infer P) => any ? P : unknown;
+
 export class Store<T, A extends ActionMap<T> = ActionMap<T>> {
   private signal: Signal<T>;
   private actions: A;
@@ -125,6 +129,8 @@ export class Store<T, A extends ActionMap<T> = ActionMap<T>> {
    * @param action - Registered action name or thunk function
    * @param payload - Optional payload forwarded to the action handler
    */
+  dispatch<K extends keyof A & string>(action: K, payload?: DispatchPayload<A[K]>): Promise<void>;
+  dispatch(action: ThunkAction<T>): Promise<void>;
   dispatch(action: (keyof A & string) | ThunkAction<T>, payload?: unknown): Promise<void> {
     return this._dispatch(action, payload);
   }

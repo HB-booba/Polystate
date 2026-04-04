@@ -1,5 +1,5 @@
-import type { Selector, Store } from '@polystate/core';
-import { useCallback, useSyncExternalStore } from 'react';
+import type { ActionMap, Selector, Store } from '@polystate/core';
+import { useCallback, useRef, useSyncExternalStore } from 'react';
 
 /**
  * Subscribes to the entire store state using React's useSyncExternalStore.
@@ -44,10 +44,23 @@ export function useStore<T>(store: Store<T>): T {
  * ```
  */
 export function useSelector<T, S>(store: Store<T>, selector: Selector<T, S>): S {
+  // Stable ref prevents re-subscribing on every render when an inline arrow is used.
+  const selectorRef = useRef(selector);
+  selectorRef.current = selector;
+
+  const stableSubscribe = useCallback(
+    (listener: () => void) =>
+      store.subscribe(
+        (state: T) => selectorRef.current(state),
+        () => listener()
+      ),
+    [store]
+  );
+
   return useSyncExternalStore(
-    (listener) => store.subscribe(selector, () => listener()),
-    () => store.getState(selector),
-    () => store.getState(selector)
+    stableSubscribe,
+    () => store.getState(selectorRef.current),
+    () => store.getState(selectorRef.current)
   );
 }
 
@@ -67,11 +80,14 @@ export function useSelector<T, S>(store: Store<T>, selector: Selector<T, S>): S 
  * }
  * ```
  */
-export function useDispatch<T>(store: Store<T>): {
-  dispatch: (action: string, payload?: unknown) => Promise<void>;
+export function useDispatch<T, A extends ActionMap<T>>(
+  store: Store<T, A>
+): {
+  dispatch: (action: keyof A & string, payload?: unknown) => Promise<void>;
 } {
   const dispatch = useCallback(
-    (action: string, payload?: unknown) => store.dispatch(action, payload),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (action: keyof A & string, payload?: unknown) => store.dispatch(action, payload as any),
     [store]
   );
 
@@ -101,10 +117,10 @@ export function useSetState<T>(store: Store<T>): (patch: Partial<T>) => void {
   return useCallback((patch: Partial<T>) => store.setState(patch), [store]);
 }
 
-export interface StoreHooks<T> {
+export interface StoreHooks<T, A extends ActionMap<T> = ActionMap<T>> {
   useStore: () => T;
   useSelector: <S>(selector: Selector<T, S>) => S;
-  useDispatch: () => { dispatch: (action: string, payload?: unknown) => Promise<void> };
+  useDispatch: () => { dispatch: (action: keyof A & string, payload?: unknown) => Promise<void> };
   useSetState: () => (patch: Partial<T>) => void;
 }
 
@@ -132,7 +148,7 @@ export interface StoreHooks<T> {
  * }
  * ```
  */
-export function createStoreHooks<T>(store: Store<T>): StoreHooks<T> {
+export function createStoreHooks<T, A extends ActionMap<T>>(store: Store<T, A>): StoreHooks<T, A> {
   return {
     useStore: () => useStore(store),
     useSelector: <S>(selector: Selector<T, S>) => useSelector(store, selector),
