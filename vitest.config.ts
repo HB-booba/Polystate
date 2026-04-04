@@ -8,6 +8,8 @@ export default defineConfig({
         alias: {
             '@polystate/definition': path.resolve(__dirname, 'packages/definition/src/index.ts'),
             '@polystate/core': path.resolve(__dirname, 'packages/core/src/index.ts'),
+            '@polystate/devtools': path.resolve(__dirname, 'packages/devtools/src/index.ts'),
+            '@polystate/react': path.resolve(__dirname, 'packages/react/src/index.ts'),
         },
     },
     test: {

@@ -1,13 +1,27 @@
 import type { Middleware, MiddlewareContext, Store } from '@polystate/core';
 
 /**
+ * Structured message received from the Redux DevTools Extension.
+ */
+interface DevToolsMessage {
+  type: string;
+  payload?: { type: string; actionId?: number };
+  state?: string;
+}
+
+/**
  * Redux DevTools Extension interface.
  */
 interface DevToolsExtension {
-  send(action: any, state: any): void;
-  init(state: any): void;
-  subscribe(callback: (message: any) => void): (() => void) | undefined;
+  send(action: { type: string; payload?: unknown; timestamp: number }, state: unknown): void;
+  init(state: unknown): void;
+  subscribe(callback: (message: DevToolsMessage) => void): (() => void) | undefined;
 }
+
+/** Typed accessor for the Redux DevTools browser extension. */
+type WindowWithDevTools = typeof window & {
+  __REDUX_DEVTOOLS_EXTENSION__?: (config: { name: string; maxAge: number }) => DevToolsExtension;
+};
 
 /**
  * Configuration for the DevTools middleware.
@@ -70,13 +84,51 @@ export function createDevToolsMiddleware<T>(
 
   let devtools: DevToolsExtension | undefined;
   let actionIndex = 0;
-  const actionHistory: Array<{ action: string; state: T }> = [];
+  // Map from monotonic action index → state snapshot for accurate time-travel.
+  // Using a Map preserves insertion order and allows O(1) keyed lookup even
+  // after entries have been evicted to respect maxAge.
+  const stateByIndex = new Map<number, T>();
 
   // Initialize DevTools connection
   if (typeof window !== 'undefined') {
-    const ext = (window as any).__REDUX_DEVTOOLS_EXTENSION__;
+    const ext = (window as WindowWithDevTools).__REDUX_DEVTOOLS_EXTENSION__;
     if (ext) {
-      devtools = ext({ name, maxAge });
+      const dt: DevToolsExtension = ext({ name, maxAge });
+      devtools = dt;
+
+      // Send the initial state so DevTools shows a baseline @@INIT entry
+      dt.init(store.getState());
+
+      // Register the time-travel listener once at middleware-creation time.
+      // Doing this inside the returned middleware fn (per-action) was wrong:
+      // it would silently re-register on every dispatch.
+      if (timeTravel) {
+        dt.subscribe?.((message: DevToolsMessage) => {
+          if (message.type !== 'DISPATCH') return;
+
+          const payloadType = message.payload?.type ?? '';
+
+          if (payloadType === 'JUMP_TO_STATE') {
+            try {
+              if (!message.state) return;
+              const targetState: T = JSON.parse(message.state) as T;
+              store.setState(targetState);
+            } catch (e) {
+              console.error('[Polystate DevTools] Failed to parse JUMP_TO_STATE', e);
+            }
+          } else if (payloadType === 'JUMP_TO_ACTION') {
+            // actionId is the monotonic index assigned by DevTools to each action.
+            // We store snapshots keyed by the same counter so the lookup is exact.
+            const targetId = message.payload?.actionId as number;
+            const targetState = stateByIndex.get(targetId);
+            if (targetState !== undefined) {
+              store.setState(targetState);
+            } else {
+              console.warn(`[Polystate DevTools] No state snapshot for actionId ${targetId}`);
+            }
+          }
+        });
+      }
     }
   }
 
@@ -85,51 +137,20 @@ export function createDevToolsMiddleware<T>(
 
     actionIndex++;
 
-    // Record action
-    const actionRecord = {
-      type: context.action,
-      payload: context.payload,
-      timestamp: Date.now(),
-    };
+    // Snapshot current state keyed by this action's index
+    stateByIndex.set(actionIndex, context.nextState);
 
-    actionHistory.push({
-      action: context.action,
-      state: context.nextState,
-    });
-
-    // Limit history size
-    if (actionHistory.length > maxAge) {
-      actionHistory.shift();
+    // Enforce maxAge by evicting the oldest entry
+    if (stateByIndex.size > maxAge) {
+      const oldestKey = stateByIndex.keys().next().value as number;
+      stateByIndex.delete(oldestKey);
     }
 
-    // Send to DevTools
-    devtools.send(actionRecord, context.nextState);
-
-    // Subscribe to DevTools messages for time-travel
-    if (timeTravel && actionIndex === 1) {
-      devtools.subscribe?.((message: any) => {
-        if (message.type !== 'DISPATCH') return;
-
-        const payloadType: string = message.payload?.type;
-
-        if (payloadType === 'JUMP_TO_STATE') {
-          try {
-            const targetState: T = JSON.parse(message.state);
-            store.setState(targetState);
-          } catch (e) {
-            console.error('[Polystate DevTools] Failed to parse JUMP_TO_STATE', e);
-          }
-        } else if (payloadType === 'JUMP_TO_ACTION') {
-          const targetIndex = message.payload.actionId as number;
-          const record =
-            actionHistory.find((_, i) => i === targetIndex - 1) ??
-            actionHistory[actionHistory.length - 1];
-          if (record) {
-            store.setState(record.state);
-          }
-        }
-      });
-    }
+    // Send action + resulting state to DevTools
+    devtools.send(
+      { type: context.action, payload: context.payload, timestamp: Date.now() },
+      context.nextState
+    );
   };
 }
 
@@ -148,9 +169,12 @@ export function createDevToolsMiddleware<T>(
  * });
  * ```
  */
-export function connectDevTools(store: any, _config: DevToolsConfig = {}): any {
-  // This is a helper for connecting DevTools after store creation
-  // Useful for stores created without middleware options
+export function connectDevTools<T>(store: Store<T>, config: DevToolsConfig = {}): Store<T> {
+  // createDevToolsMiddleware initializes the DevTools connection (init + subscribe) immediately.
+  // We then inject the returned per-action middleware into the store's pipeline via the
+  // public addMiddleware() API so every future dispatch is recorded in the DevTools panel.
+  const mw = createDevToolsMiddleware(store, config);
+  store.addMiddleware(mw);
   return store;
 }
 
@@ -175,7 +199,7 @@ export interface DevToolsAction {
  * console.log(JSON.stringify(history, null, 2));
  * ```
  */
-export function exportStateHistory(_store: any): Array<{ action: string; state: any }> {
+export function exportStateHistory<T>(_store: Store<T>): Array<{ action: string; state: T }> {
   // This would be implemented to export the internal history
   return [];
 }
@@ -192,9 +216,9 @@ export function exportStateHistory(_store: any): Array<{ action: string; state: 
  * importStateHistory(store, savedHistory);
  * ```
  */
-export function importStateHistory(
-  _store: any,
-  _history: Array<{ action: string; state: any }>
+export function importStateHistory<T>(
+  _store: Store<T>,
+  _history: Array<{ action: string; state: T }>
 ): void {
   // This would be implemented to import the history
 }

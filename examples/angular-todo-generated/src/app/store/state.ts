@@ -4,10 +4,10 @@
  */
 
 export interface TodoState {
-    todos: Array<{
-        id: number;
-        title: string;
-        done: boolean;
-    }>;
-    filter: 'all' | 'active' | 'completed';
+  todos: Array<{
+            id: number;
+            title: string;
+            done: boolean;
+        }>;
+  filter: 'all' | 'active' | 'completed';
 }

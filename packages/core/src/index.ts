@@ -9,7 +9,7 @@
 export { Signal } from './signal';
 
 // Store and types
-export { Store, createStore } from './store';
+export { createStore, Store } from './store';
 export type {
   ActionHandler,
   ActionMap,
@@ -25,13 +25,7 @@ export { composeSlices, createSlice, prefixActions } from './slice';
 export type { Slice, SliceOptions } from './slice';
 
 // Middleware
-export {
-  devToolsMiddleware,
-  loadPersistedState,
-  loggerMiddleware,
-  persistMiddleware,
-  thunkMiddleware,
-} from './middleware';
+export { loadPersistedState, loggerMiddleware, persistMiddleware } from './middleware';
 export type { Middleware, MiddlewareContext } from './middleware';
 
 // RxJS compatibility

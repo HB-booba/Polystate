@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  devToolsMiddleware,
-  loadPersistedState,
-  loggerMiddleware,
-  persistMiddleware,
-} from './middleware';
+import { loadPersistedState, loggerMiddleware, persistMiddleware } from './middleware';
 import { createStore } from './store';
 
 describe('Middleware', () => {
@@ -141,54 +136,6 @@ describe('Middleware', () => {
       await store.dispatch('increment');
       expect(errorSpy).toHaveBeenCalled();
       errorSpy.mockRestore();
-    });
-  });
-
-  describe('devToolsMiddleware', () => {
-    it('should send actions to devtools if available', async () => {
-      const devtoolsMock = {
-        send: vi.fn(),
-      };
-
-      const original = (window as any).__REDUX_DEVTOOLS_EXTENSION__;
-      (window as any).__REDUX_DEVTOOLS_EXTENSION__ = () => devtoolsMock;
-
-      const store = createStore<TestState>(
-        { count: 0 },
-        {
-          increment: (state) => ({ ...state, count: state.count + 1 }),
-        },
-        {
-          middleware: [devToolsMiddleware('TestStore')],
-        }
-      );
-
-      await store.dispatch('increment');
-      expect(devtoolsMock.send).toHaveBeenCalledWith(
-        { type: 'increment', payload: undefined },
-        { count: 1 }
-      );
-
-      (window as any).__REDUX_DEVTOOLS_EXTENSION__ = original;
-    });
-
-    it('should handle missing devtools gracefully', async () => {
-      const original = (window as any).__REDUX_DEVTOOLS_EXTENSION__;
-      delete (window as any).__REDUX_DEVTOOLS_EXTENSION__;
-
-      const store = createStore<TestState>(
-        { count: 0 },
-        {
-          increment: (state) => ({ ...state, count: state.count + 1 }),
-        },
-        {
-          middleware: [devToolsMiddleware()],
-        }
-      );
-
-      // Should not throw
-      await store.dispatch('increment');
-      (window as any).__REDUX_DEVTOOLS_EXTENSION__ = original;
     });
   });
 });

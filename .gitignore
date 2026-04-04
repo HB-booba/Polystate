@@ -6,7 +6,6 @@ yarn.lock
 # Build outputs
 dist
 build
-docs
 out
 *.tsbuildinfo
 
@@ -50,3 +49,7 @@ polystate.zip
 
 # nx
 .nx/
+
+# docs — ignore generated/slide assets, but track markdown documentation
+docs/*/assets
+docs/slides/

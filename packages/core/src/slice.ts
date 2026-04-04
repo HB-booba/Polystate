@@ -97,15 +97,15 @@ export function createSlice<T>(
  * // Result: { 'counter/increment': (fullState, payload) => ({ ...fullState, counter: handler(fullState.counter, payload) }) }
  * ```
  */
-export function prefixActions<TSlice, TFull extends Record<string, any> = Record<string, any>>(
-  actions: ActionMap<TSlice>,
-  prefix: string
-): ActionMap<TFull> {
+export function prefixActions<
+  TSlice,
+  TFull extends Record<string, unknown> = Record<string, unknown>,
+>(actions: ActionMap<TSlice>, prefix: string): ActionMap<TFull> {
   const result: ActionMap<TFull> = {};
   Object.entries(actions).forEach(([name, handler]) => {
     result[`${prefix}/${name}`] = (fullState: TFull, payload) => ({
       ...fullState,
-      [prefix]: handler((fullState as any)[prefix], payload),
+      [prefix]: handler((fullState as Record<string, unknown>)[prefix] as TSlice, payload),
     });
   });
   return result;
@@ -141,9 +141,9 @@ export function prefixActions<TSlice, TFull extends Record<string, any> = Record
  * );
  * ```
  */
-export function composeSlices<T extends Slice<any>>(
+export function composeSlices<T extends Slice<unknown>>(
   slices: T[]
-): Array<{ initialState: any; actions: ActionMap<any> }> {
+): Array<{ initialState: unknown; actions: ActionMap<unknown> }> {
   return slices.map((slice) => ({
     initialState: slice.initialState,
     actions: slice.actions,

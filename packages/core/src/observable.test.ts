@@ -218,13 +218,15 @@ describe('Observable', () => {
       const listener = vi.fn();
       distinct$.subscribe(listener);
 
+      await store.dispatch('setValue', 3); // first value received → always emitted (odd)
       await store.dispatch('setValue', 3); // odd → odd (same parity), suppress
       await store.dispatch('setValue', 2); // odd → even, emit
       await store.dispatch('setValue', 4); // even → even, suppress
       await store.dispatch('setValue', 7); // even → odd, emit
-      expect(listener).toHaveBeenCalledTimes(2);
-      expect(listener).toHaveBeenNthCalledWith(1, 2);
-      expect(listener).toHaveBeenNthCalledWith(2, 7);
+      expect(listener).toHaveBeenCalledTimes(3);
+      expect(listener).toHaveBeenNthCalledWith(1, 3);
+      expect(listener).toHaveBeenNthCalledWith(2, 2);
+      expect(listener).toHaveBeenNthCalledWith(3, 7);
     });
 
     it('each subscription has independent state', async () => {

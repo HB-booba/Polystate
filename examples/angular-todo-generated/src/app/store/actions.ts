@@ -6,21 +6,21 @@
 import { createAction, props } from '@ngrx/store';
 
 export const addTodo = createAction(
-    '[Todo] addTodo',
-    props<{ payload: string }>()
+  '[Todo] addTodo',
+  props<{ payload: string }>()
 );
 
 export const toggleTodo = createAction(
-    '[Todo] toggleTodo',
-    props<{ payload: number }>()
+  '[Todo] toggleTodo',
+  props<{ payload: number }>()
 );
 
 export const removeTodo = createAction(
-    '[Todo] removeTodo',
-    props<{ payload: number }>()
+  '[Todo] removeTodo',
+  props<{ payload: number }>()
 );
 
 export const setFilter = createAction(
-    '[Todo] setFilter',
-    props<{ payload: string }>()
+  '[Todo] setFilter',
+  props<{ payload: 'all' | 'active' | 'completed' }>()
 );

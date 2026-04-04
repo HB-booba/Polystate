@@ -1,6 +1,5 @@
 /**
  * Generated Angular Facade Service for todo store
- * Simplifies component interaction with NgRx store
  * Do not edit manually - regenerate with: polystate generate
  */
 
@@ -11,51 +10,39 @@ import * as TodoActions from './actions';
 import * as fromTodoSelectors from './selectors';
 import { TodoState } from './state';
 
+type Todo = { id: number; title: string; done: boolean };
+
 @Injectable({ providedIn: 'root' })
 export class TodoFacade {
-    // ========================================================================
-    // Selectors (as Observables)
-    // ========================================================================
+  todos$: Observable<Todo[]> = this.store.pipe(select(fromTodoSelectors.selectTodos));
+  filter$: Observable<'all' | 'active' | 'completed'> = this.store.pipe(
+    select(fromTodoSelectors.selectFilter)
+  );
+  filteredTodos$: Observable<Todo[]> = this.store.pipe(
+    select(fromTodoSelectors.selectFilteredTodos)
+  );
+  activeTodoCount$: Observable<number> = this.store.pipe(
+    select(fromTodoSelectors.selectActiveTodoCount)
+  );
+  completedTodoCount$: Observable<number> = this.store.pipe(
+    select(fromTodoSelectors.selectCompletedTodoCount)
+  );
 
-    todos$: Observable<any> = this.store.pipe(
-        select(fromTodoSelectors.selectTodos)
-    );
+  constructor(private store: Store<{ todo: TodoState }>) {}
 
-    filter$: Observable<any> = this.store.pipe(
-        select(fromTodoSelectors.selectFilter)
-    );
+  addTodo(payload: string): void {
+    this.store.dispatch(TodoActions.addTodo({ payload }));
+  }
 
-    filteredTodos$: Observable<any> = this.store.pipe(
-        select(fromTodoSelectors.selectFilteredTodos)
-    );
+  toggleTodo(payload: number): void {
+    this.store.dispatch(TodoActions.toggleTodo({ payload }));
+  }
 
-    activeTodoCount$: Observable<any> = this.store.pipe(
-        select(fromTodoSelectors.selectActiveTodoCount)
-    );
+  removeTodo(payload: number): void {
+    this.store.dispatch(TodoActions.removeTodo({ payload }));
+  }
 
-    completedTodoCount$: Observable<any> = this.store.pipe(
-        select(fromTodoSelectors.selectCompletedTodoCount)
-    );
-
-    constructor(private store: Store<{ todo: TodoState }>) { }
-
-    // ========================================================================
-    // Actions (as methods)
-    // ========================================================================
-
-    addTodo(payload: string): void {
-        this.store.dispatch(TodoActions.addTodo({ payload }));
-    }
-
-    toggleTodo(payload: number): void {
-        this.store.dispatch(TodoActions.toggleTodo({ payload }));
-    }
-
-    removeTodo(payload: number): void {
-        this.store.dispatch(TodoActions.removeTodo({ payload }));
-    }
-
-    setFilter(payload: string): void {
-        this.store.dispatch(TodoActions.setFilter({ payload }));
-    }
+  setFilter(payload: 'all' | 'active' | 'completed'): void {
+    this.store.dispatch(TodoActions.setFilter({ payload }));
+  }
 }

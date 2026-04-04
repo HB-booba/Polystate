@@ -3,11 +3,14 @@
  * Generates Redux store, actions, and hooks
  */
 
-import { ActionAST, AsyncActionAST, FieldAST, StoreAST, StoreDefinition, extractActions } from '@polystate/definition';
-
-interface GeneratorOptions {
-  overwrite?: boolean;
-}
+import {
+    ActionAST,
+    AsyncActionAST,
+    FieldAST,
+    StoreAST,
+    StoreDefinition,
+    extractActions,
+} from '@polystate/definition';
 
 /**
  * Generates Redux store code from a store definition
@@ -30,11 +33,8 @@ import { createSelector } from 'reselect';
 
 export interface ${storeName}State {
 ${Object.entries(initialState)
-      .map(
-        ([key, value]) =>
-          `  ${key}: ${getTypeFromValue(value)};`
-      )
-      .join('\n')}
+  .map(([key, value]) => `  ${key}: ${getTypeFromValue(value)};`)
+  .join('\n')}
 }
 
 // ============================================================================
@@ -57,8 +57,8 @@ ${generateReducers(definition).split('\n').join('\n')}
 
 export const {
 ${extractActions(definition)
-      .map(({ name }: { name: string }) => `  ${name},`)
-      .join('\n')}
+  .map(({ name }: { name: string }) => `  ${name},`)
+  .join('\n')}
 } = ${name}Slice.actions;
 
 // ============================================================================
@@ -141,8 +141,8 @@ import { useMemo } from 'react';
 import type { RootState, AppDispatch } from './store';
 import {
 ${extractActions(definition)
-      .map(({ name }: { name: string }) => `  ${name},`)
-      .join('\n')}
+  .map(({ name }: { name: string }) => `  ${name},`)
+  .join('\n')}
 } from './store';
 
 // ============================================================================
@@ -203,11 +203,8 @@ export function generateTypes(definition: StoreDefinition): string {
 
 export interface ${storeName}State {
 ${Object.entries(definition.initialState)
-      .map(
-        ([key, value]) =>
-          `  ${key}: ${getTypeFromValue(value)};`
-      )
-      .join('\n')}
+  .map(([key, value]) => `  ${key}: ${getTypeFromValue(value)};`)
+  .join('\n')}
 }
 
 export interface ${storeName}Actions {
@@ -224,6 +221,7 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getTypeFromValue(value: any, depth = 0): string {
   if (value === null || value === undefined) return 'any';
   if (Array.isArray(value)) {
@@ -234,9 +232,7 @@ function getTypeFromValue(value: any, depth = 0): string {
     if (depth > 3) return 'Record<string, any>';
     const entries = Object.entries(value);
     if (entries.length === 0) return 'Record<string, any>';
-    const props = entries
-      .map(([k, v]) => `${k}: ${getTypeFromValue(v, depth + 1)}`)
-      .join('; ');
+    const props = entries.map(([k, v]) => `${k}: ${getTypeFromValue(v, depth + 1)}`).join('; ');
     return `{ ${props} }`;
   }
   return typeof value;
@@ -244,12 +240,17 @@ function getTypeFromValue(value: any, depth = 0): string {
 
 function generateReducers(definition: StoreDefinition): string {
   return extractActions(definition)
-    .map(({ name: actionName, handler, paramCount }: { name: string; handler: (...args: unknown[]) => unknown; paramCount: number }) =>
-      serializeActionToReducer(
-        actionName,
-        handler as (...args: unknown[]) => unknown,
-        paramCount
-      )
+    .map(
+      ({
+        name: actionName,
+        handler,
+        paramCount,
+      }: {
+        name: string;
+        handler: (...args: unknown[]) => unknown;
+        paramCount: number;
+      }) =>
+        serializeActionToReducer(actionName, handler as (...args: unknown[]) => unknown, paramCount)
     )
     .join('\n');
 }
@@ -286,10 +287,7 @@ function extractPayloadParamName(src: string): string {
   return match?.[1] ?? 'payload';
 }
 
-function tryConvertHandlerToImmer(
-  src: string,
-  payloadParamName: string | null
-): string | null {
+function tryConvertHandlerToImmer(src: string, payloadParamName: string | null): string | null {
   const objContent = extractReturnObjectContent(src);
   if (!objContent) return null;
 
@@ -317,9 +315,7 @@ function convertPropertyToImmerMutation(
   rawValue: string,
   payloadParamName: string | null
 ): string | null {
-  let value = payloadParamName
-    ? replacePayloadParam(rawValue, payloadParamName)
-    : rawValue;
+  let value = payloadParamName ? replacePayloadParam(rawValue, payloadParamName) : rawValue;
   value = value.trim();
 
   // Push pattern: [...state.key, item]
@@ -351,15 +347,9 @@ function replacePayloadParam(src: string, paramName: string): string {
     `((?:[{,][\\s\\r\\n]*))\\b(${paramName})\\b(?=[\\s\\r\\n]*[,}])`,
     'g'
   );
-  let result = src.replace(
-    shorthandRe,
-    (_, before, name) => `${before}${name}: action.payload`
-  );
+  let result = src.replace(shorthandRe, (_, before, name) => `${before}${name}: action.payload`);
   // Replace all remaining standalone occurrences (negative lookbehind for ".")
-  result = result.replace(
-    new RegExp(`(?<!\\.)\\b${paramName}\\b(?!\\s*:)`, 'g'),
-    'action.payload'
-  );
+  result = result.replace(new RegExp(`(?<!\\.)\\b${paramName}\\b(?!\\s*:)`, 'g'), 'action.payload');
   return result;
 }
 
@@ -396,7 +386,10 @@ function extractReturnObjectContent(src: string): string | null {
   while (i < src.length && depth > 0) {
     const ch = src.charAt(i);
     if (inString) {
-      if (ch === '\\') { i += 2; continue; }
+      if (ch === '\\') {
+        i += 2;
+        continue;
+      }
       if (ch === stringChar) inString = false;
     } else {
       if (ch === '"' || ch === "'" || ch === '`') {
@@ -451,7 +444,10 @@ function extractObjectProperties(
       while (i < len) {
         const ch = propsContent.charAt(i);
         if (inString) {
-          if (ch === '\\') { i += 2; continue; }
+          if (ch === '\\') {
+            i += 2;
+            continue;
+          }
           if (ch === stringChar) inString = false;
         } else {
           if (ch === '"' || ch === "'" || ch === '`') {
@@ -479,11 +475,7 @@ function extractObjectProperties(
   return props.length > 0 ? props : null;
 }
 
-function generateSelectors(
-  definition: StoreDefinition,
-  name: string,
-  storeName: string
-): string {
+function generateSelectors(definition: StoreDefinition, name: string, storeName: string): string {
   return Object.keys(definition.initialState)
     .map((key) => {
       const selectorName = `select${capitalize(key)}`;
@@ -627,9 +619,8 @@ function fieldToSelectorHook(field: FieldAST, storeName: string): string {
  */
 function asyncActionToThunk(action: AsyncActionAST, storeName: string): string {
   const { name, payloadType, payloadParamName, handlerBody } = action;
-  const paramList = payloadParamName && payloadType
-    ? `(${payloadParamName}: ${payloadType})`
-    : '()';
+  const paramList =
+    payloadParamName && payloadType ? `(${payloadParamName}: ${payloadType})` : '()';
   const typeParam = payloadType ? `<unknown, ${payloadType}>` : '';
 
   return `export const ${name} = createAsyncThunk${typeParam}(
@@ -656,11 +647,7 @@ function asyncExtraReducers(asyncActions: AsyncActionAST[]): string {
     `      });`,
   ]);
 
-  return [
-    `  extraReducers: (builder) => {`,
-    ...cases,
-    `  },`,
-  ].join('\n');
+  return [`  extraReducers: (builder) => {`, ...cases, `  },`].join('\n');
 }
 
 /**
@@ -670,14 +657,15 @@ export function generateReduxStoreFromAST(ast: StoreAST): string {
   const { name, fields, actions, asyncActions } = ast;
   const storeName = capitalize(name);
 
-  const stateFields = fields
-    .map((f) => `  ${f.name}: ${fieldToTypeStr(f)};`)
-    .join('\n');
+  const stateFields = fields.map((f) => `  ${f.name}: ${fieldToTypeStr(f)};`).join('\n');
 
   const initialStateLines = fields.map((f) => {
     const val = fieldToInitialValueStr(f);
     const indented = val.includes('\n')
-      ? val.split('\n').map((l, i) => (i === 0 ? l : '  ' + l)).join('\n')
+      ? val
+          .split('\n')
+          .map((l, i) => (i === 0 ? l : '  ' + l))
+          .join('\n')
       : val;
     return `  ${f.name}: ${indented},`;
   });
@@ -697,7 +685,8 @@ export function generateReduxStoreFromAST(ast: StoreAST): string {
   const asyncImport = hasAsync ? ', createAsyncThunk' : '';
   const thunks = hasAsync
     ? '\n// ============================================================================\n// Async Thunks\n// ============================================================================\n\n' +
-    asyncActions.map((a) => asyncActionToThunk(a, name)).join('\n\n') + '\n'
+      asyncActions.map((a) => asyncActionToThunk(a, name)).join('\n\n') +
+      '\n'
     : '';
   const extraReducers = hasAsync ? '\n' + asyncExtraReducers(asyncActions) : '';
 
@@ -779,14 +768,11 @@ export function generateHooksFromAST(ast: StoreAST): string {
   // Derived hooks for todo+filter pattern
   const hasTodos = fields.some((f) => f.name === 'todos');
   const hasFilter = fields.some((f) => f.name === 'filter');
-  const filterType = fields.find((f) => f.name === 'filter');
   const todosType = fields.find((f) => f.name === 'todos');
-  const todoElementType = todosType?.typeAnnotation
-    ? todosType.typeAnnotation.replace(/^Array<(.+)>$/, '$1').replace(/^\[(.+)\]$/, '$1')
-    : 'any';
 
-  const derivedHooks = hasTodos && hasFilter
-    ? `\nexport function useFilteredTodos(): ${todosType?.typeAnnotation ?? 'any[]'} {
+  const derivedHooks =
+    hasTodos && hasFilter
+      ? `\nexport function useFilteredTodos(): ${todosType?.typeAnnotation ?? 'any[]'} {
   const todos = useTodos();
   const filter = useFilter();
   if (filter === 'active') return todos.filter((t) => !t.done);
@@ -797,7 +783,7 @@ export function generateHooksFromAST(ast: StoreAST): string {
 export function useActiveTodoCount(): number {
   return useTodos().filter((t) => !t.done).length;
 }`
-    : '';
+      : '';
 
   return `/**
  * Generated React hooks for ${name} store
@@ -866,9 +852,7 @@ export function generateTypesFromAST(ast: StoreAST): string {
   const stateFields = fields.map((f) => `  ${f.name}: ${fieldToTypeStr(f)};`).join('\n');
   const actionTypes = actions
     .map((a) =>
-      a.payloadType
-        ? `  ${a.name}(payload: ${a.payloadType}): void;`
-        : `  ${a.name}(): void;`
+      a.payloadType ? `  ${a.name}(payload: ${a.payloadType}): void;` : `  ${a.name}(): void;`
     )
     .join('\n');
 

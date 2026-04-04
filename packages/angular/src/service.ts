@@ -1,7 +1,7 @@
-import { effect, Injectable, OnDestroy, signal } from '@angular/core';
-import type { Selector, Store } from '@polystate/core';
+import { Directive, OnDestroy, signal } from '@angular/core';
+import type { ActionMap, Selector, Store } from '@polystate/core';
 import { asObservable, createStore } from '@polystate/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 /**
@@ -26,13 +26,19 @@ import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
  * ) {}
  * ```
  */
-@Injectable()
-export abstract class PolystateService<T> implements OnDestroy {
-  protected store!: Store<T>;
+@Directive()
+export abstract class PolystateService<
+  T,
+  A extends ActionMap<T> = ActionMap<T>,
+> implements OnDestroy {
+  protected store!: Store<T, A>;
 
   private readonly destroy$ = new Subject<void>();
+  private readonly _cleanups: Array<() => void> = [];
 
   ngOnDestroy(): void {
+    this._cleanups.forEach((fn) => fn());
+    this._cleanups.length = 0;
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -58,15 +64,10 @@ export abstract class PolystateService<T> implements OnDestroy {
   select<S>(selector: Selector<T, S>): () => S {
     const sig = signal(selector(this.store.getState()));
 
-    this.store.subscribe(selector, (value) => {
+    const unsubscribe = this.store.subscribe(selector, (value) => {
       sig.set(value);
     });
-
-    // Cleanup on destroy is handled by Angular's lifecycle
-    effect(() => {
-      // This ensures the effect is tracked and can be cleaned up
-      sig();
-    });
+    this._cleanups.push(unsubscribe);
 
     return sig;
   }
@@ -91,13 +92,14 @@ export abstract class PolystateService<T> implements OnDestroy {
    * </div>
    * ```
    */
-  select$<S>(selector: Selector<T, S>) {
+  select$<S>(selector: Selector<T, S>): Observable<S> {
     const observable = asObservable(this.store, selector);
     const subject = new BehaviorSubject(this.store.getState(selector));
 
-    observable.subscribe((value) => {
+    const sub = observable.subscribe((value) => {
       subject.next(value);
     });
+    this._cleanups.push(() => sub.unsubscribe());
 
     return subject.asObservable().pipe(distinctUntilChanged(), takeUntil(this.destroy$));
   }
@@ -113,8 +115,9 @@ export abstract class PolystateService<T> implements OnDestroy {
    * service.dispatch('addTodo', 'Learn Angular');
    * ```
    */
-  dispatch(action: string, payload?: unknown): Promise<void> {
-    return this.store.dispatch(action, payload);
+  dispatch(action: keyof A & string, payload?: unknown): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return this.store.dispatch(action, payload as any);
   }
 
   /** Gets the current state snapshot. */
@@ -167,11 +170,11 @@ export abstract class PolystateService<T> implements OnDestroy {
  * }
  * ```
  */
-export function createAngularService<T>(
+export function createAngularService<T, A extends ActionMap<T>>(
   initialState: T,
-  actions: Record<string, (state: T, payload?: unknown) => T>
-): new () => PolystateService<T> {
-  return class extends PolystateService<T> {
+  actions: A
+): new () => PolystateService<T, A> {
+  return class extends PolystateService<T, A> {
     constructor() {
       super();
       this.store = createStore(initialState, actions);

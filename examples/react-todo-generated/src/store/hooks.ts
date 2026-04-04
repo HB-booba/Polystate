@@ -32,7 +32,35 @@ export function useTodoState() {
 }
 
 // ============================================================================
-// Action Hooks
+// Field Selector Hooks
+// ============================================================================
+
+export function useTodos() {
+  return useSelector((state: RootState) => state.todo.todos);
+}
+
+export function useFilter() {
+  return useSelector((state: RootState) => state.todo.filter);
+}
+
+export function useFilteredTodos(): Array<{
+            id: number;
+            title: string;
+            done: boolean;
+        }> {
+  const todos = useTodos();
+  const filter = useFilter();
+  if (filter === 'active') return todos.filter((t) => !t.done);
+  if (filter === 'completed') return todos.filter((t) => !!t.done);
+  return todos;
+}
+
+export function useActiveTodoCount(): number {
+  return useTodos().filter((t) => !t.done).length;
+}
+
+// ============================================================================
+// Action Dispatch Hooks
 // ============================================================================
 
 /**
@@ -43,37 +71,11 @@ export function useTodoDispatch() {
 
   return useMemo(
     () => ({
-      addTodo: (payload: any) => dispatch(addTodo(payload)),
-      toggleTodo: (payload: any) => dispatch(toggleTodo(payload)),
-      removeTodo: (payload: any) => dispatch(removeTodo(payload)),
-      setFilter: (payload: any) => dispatch(setFilter(payload)),
+      addTodo: (payload: string) => dispatch(addTodo(payload)),
+      toggleTodo: (payload: number) => dispatch(toggleTodo(payload)),
+      removeTodo: (payload: number) => dispatch(removeTodo(payload)),
+      setFilter: (payload: 'all' | 'active' | 'completed') => dispatch(setFilter(payload)),
     }),
     [dispatch]
   );
-}
-
-// ============================================================================
-// Selector Hooks
-// ============================================================================
-
-export function useTodos() {
-  return useSelector((state) => state.todo.todos);
-}
-
-export function useFilter() {
-  return useSelector((state) => state.todo.filter);
-}
-
-export function useFilteredTodos() {
-  const todos = useTodos() as any[];
-  const filter = useFilter() as string;
-
-  if (filter === 'active') return todos.filter((todo: any) => !todo.done);
-  if (filter === 'completed') return todos.filter((todo: any) => !!todo.done);
-  return todos;
-}
-
-export function useActiveTodoCount() {
-  const todos = useTodos() as any[];
-  return todos.filter((todo: any) => !todo.done).length;
 }
