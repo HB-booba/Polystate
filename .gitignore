@@ -50,8 +50,6 @@ polystate.zip
 # nx
 .nx/
 
-#docs
-docs
-docs/*
+# docs — ignore generated/slide assets, but track markdown documentation
 docs/*/assets
-docs/*/slides
+docs/slides/
