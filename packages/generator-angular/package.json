@@ -1,6 +1,6 @@
 {
   "name": "@polystate/generator-angular",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Angular NgRx code generator for Polystate store definitions",
   "license": "MIT",
   "main": "./dist/index.js",

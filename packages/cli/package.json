@@ -1,6 +1,6 @@
 {
   "name": "@polystate/cli",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "CLI tool for Polystate code generation",
   "license": "MIT",
   "main": "./dist/index.js",
