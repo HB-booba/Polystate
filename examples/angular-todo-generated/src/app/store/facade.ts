@@ -10,29 +10,25 @@ import * as TodoActions from './actions';
 import * as fromTodoSelectors from './selectors';
 import { TodoState } from './state';
 
+type Todo = { id: number; title: string; done: boolean };
+
 @Injectable({ providedIn: 'root' })
 export class TodoFacade {
-  // ========================================================================
-  // Selectors (as Observables)
-  // ========================================================================
-
-  todos$: Observable<Array<{
-            id: number;
-            title: string;
-            done: boolean;
-        }>> = this.store.pipe(
-    select(fromTodoSelectors.selectTodos)
-  );
-
+  todos$: Observable<Todo[]> = this.store.pipe(select(fromTodoSelectors.selectTodos));
   filter$: Observable<'all' | 'active' | 'completed'> = this.store.pipe(
     select(fromTodoSelectors.selectFilter)
   );
+  filteredTodos$: Observable<Todo[]> = this.store.pipe(
+    select(fromTodoSelectors.selectFilteredTodos)
+  );
+  activeTodoCount$: Observable<number> = this.store.pipe(
+    select(fromTodoSelectors.selectActiveTodoCount)
+  );
+  completedTodoCount$: Observable<number> = this.store.pipe(
+    select(fromTodoSelectors.selectCompletedTodoCount)
+  );
 
   constructor(private store: Store<{ todo: TodoState }>) {}
-
-  // ========================================================================
-  // Actions (as methods)
-  // ========================================================================
 
   addTodo(payload: string): void {
     this.store.dispatch(TodoActions.addTodo({ payload }));

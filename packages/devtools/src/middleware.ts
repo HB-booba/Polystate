@@ -106,11 +106,12 @@ export function createDevToolsMiddleware<T>(
         dt.subscribe?.((message: DevToolsMessage) => {
           if (message.type !== 'DISPATCH') return;
 
-          const payloadType: string = message.payload?.type;
+          const payloadType = message.payload?.type ?? '';
 
           if (payloadType === 'JUMP_TO_STATE') {
             try {
-              const targetState: T = JSON.parse(message.state);
+              if (!message.state) return;
+              const targetState: T = JSON.parse(message.state) as T;
               store.setState(targetState);
             } catch (e) {
               console.error('[Polystate DevTools] Failed to parse JUMP_TO_STATE', e);
@@ -118,7 +119,7 @@ export function createDevToolsMiddleware<T>(
           } else if (payloadType === 'JUMP_TO_ACTION') {
             // actionId is the monotonic index assigned by DevTools to each action.
             // We store snapshots keyed by the same counter so the lookup is exact.
-            const targetId = message.payload.actionId as number;
+            const targetId = message.payload?.actionId as number;
             const targetState = stateByIndex.get(targetId);
             if (targetState !== undefined) {
               store.setState(targetState);
@@ -168,9 +169,15 @@ export function createDevToolsMiddleware<T>(
  * });
  * ```
  */
-export function connectDevTools<T>(store: Store<T>, _config: DevToolsConfig = {}): Store<T> {
-  // This is a helper for connecting DevTools after store creation
-  // Useful for stores created without middleware options
+export function connectDevTools<T>(store: Store<T>, config: DevToolsConfig = {}): Store<T> {
+  // createDevToolsMiddleware initializes the DevTools connection (init + subscribe) immediately.
+  // We then inject the returned per-action middleware into the store's pipeline so that
+  // every future dispatch records the action and state in the DevTools panel.
+  const mw = createDevToolsMiddleware(store, config);
+  // Access the internal middleware array. The Store class keeps it private, but
+  // connectDevTools is a first-party utility that legitimately needs to extend it.
+  const storeInternal = store as unknown as { middleware: Array<(ctx: unknown) => void> };
+  storeInternal.middleware.push(mw as (ctx: unknown) => void);
   return store;
 }
 

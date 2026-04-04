@@ -240,7 +240,7 @@ export class Store<T> {
       this.selectiveSubscribers.set(selector, new Set());
     }
     const subscribers = this.selectiveSubscribers.get(selector)!;
-    subscribers.add(listener);
+    subscribers.add(listener as Subscriber<unknown>);
 
     return () => {
       subscribers.delete(listener);

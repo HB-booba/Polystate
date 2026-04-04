@@ -1,10 +1,10 @@
 /**
  * Simple counter example — verifies basic store lifecycle and subscription cleanup.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createStore } from '@polystate/core';
-import { asObservable, distinctUntilChanged, map } from '@polystate/core';
+import { asObservable, createStore, distinctUntilChanged, map } from '@polystate/core';
+import type { ActionMap } from '@polystate/core';
 
 interface CounterState {
   count: number;
@@ -13,11 +13,11 @@ interface CounterState {
 
 const initialState: CounterState = { count: 0, label: 'Counter' };
 
-const actions = {
+const actions: ActionMap<CounterState> = {
   increment: (state: CounterState) => ({ ...state, count: state.count + 1 }),
   decrement: (state: CounterState) => ({ ...state, count: state.count - 1 }),
   reset: (state: CounterState) => ({ ...state, count: 0 }),
-  setLabel: (state: CounterState, label: string) => ({ ...state, label }),
+  setLabel: (state: CounterState, payload: unknown) => ({ ...state, label: payload as string }),
 };
 
 describe('Simple counter example', () => {
@@ -71,10 +71,7 @@ describe('Simple counter example', () => {
 
     it('should not leak selective subscribers after unsubscribe', async () => {
       const listener = vi.fn();
-      const unsub = store.subscribe(
-        (s: CounterState) => s.count,
-        listener
-      );
+      const unsub = store.subscribe((s: CounterState) => s.count, listener);
 
       await store.dispatch('increment');
       expect(listener).toHaveBeenCalledTimes(1);
@@ -118,18 +115,16 @@ describe('Simple counter example', () => {
     });
 
     it('distinctUntilChanged should not re-emit same value', async () => {
-      const obs$ = asObservable(store, (s: CounterState) => s.label).pipe(
-        distinctUntilChanged()
-      );
+      const obs$ = asObservable(store, (s: CounterState) => s.label).pipe(distinctUntilChanged());
       const received: string[] = [];
       const sub = obs$.subscribe((v) => received.push(v));
 
       // The observable only fires on changes — it does NOT replay current state on subscribe.
       // label == 'Counter' already; dispatching same value produces no change event.
       await store.dispatch('setLabel', 'Counter'); // same — no emit
-      await store.dispatch('setLabel', 'New');     // different — emit (first emission seeds prev)
-      await store.dispatch('setLabel', 'New');     // same — no emit
-      await store.dispatch('setLabel', 'Final');   // different — emit
+      await store.dispatch('setLabel', 'New'); // different — emit (first emission seeds prev)
+      await store.dispatch('setLabel', 'New'); // same — no emit
+      await store.dispatch('setLabel', 'Final'); // different — emit
 
       sub.unsubscribe();
 

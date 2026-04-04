@@ -5,13 +5,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  asObservable,
-  createSlice,
-  createStore,
-  distinctUntilChanged,
-  loggerMiddleware,
-  map,
-  prefixActions,
+    asObservable,
+    createSlice,
+    createStore,
+    distinctUntilChanged,
+    loggerMiddleware,
+    map,
+    prefixActions,
 } from '@polystate/core';
 
 // ─── Domain types ─────────────────────────────────────────────────────────────
