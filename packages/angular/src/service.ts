@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy, signal } from '@angular/core';
+import { Directive, OnDestroy, signal } from '@angular/core';
 import type { Selector, Store } from '@polystate/core';
 import { asObservable, createStore } from '@polystate/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
@@ -26,7 +26,7 @@ import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
  * ) {}
  * ```
  */
-@Injectable()
+@Directive()
 export abstract class PolystateService<T> implements OnDestroy {
   protected store!: Store<T>;
 

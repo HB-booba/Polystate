@@ -3,8 +3,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { asObservable, createStore, distinctUntilChanged, map } from '@polystate/core';
 import type { ActionMap } from '@polystate/core';
+import { asObservable, createStore, distinctUntilChanged, map } from '@polystate/core';
 
 interface CounterState {
   count: number;

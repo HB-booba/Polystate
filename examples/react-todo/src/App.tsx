@@ -1,4 +1,5 @@
 import { createStore } from '@polystate/core';
+import { connectDevTools } from '@polystate/devtools';
 import { createStoreHooks } from '@polystate/react';
 import { useState } from 'react';
 
@@ -52,6 +53,9 @@ const todoStore = createStore<TodoState>(
     }),
   }
 );
+
+// Wire up Redux DevTools. Open the browser extension to inspect and time-travel.
+connectDevTools(todoStore, { name: 'TodoStore', timeTravel: true });
 
 /**
  * Create pre-bound hooks for easier usage

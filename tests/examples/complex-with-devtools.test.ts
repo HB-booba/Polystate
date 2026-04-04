@@ -12,16 +12,16 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  asObservable,
-  createStore,
-  distinctUntilChanged,
-  filter,
-  map,
-  prefixActions,
-  createSlice,
-} from '@polystate/core';
 import type { ActionMap } from '@polystate/core';
+import {
+    asObservable,
+    createSlice,
+    createStore,
+    distinctUntilChanged,
+    filter,
+    map,
+    prefixActions,
+} from '@polystate/core';
 import { connectDevTools } from '@polystate/devtools';
 
 // ─── Domain types ─────────────────────────────────────────────────────────────

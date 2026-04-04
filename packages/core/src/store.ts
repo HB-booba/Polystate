@@ -162,6 +162,16 @@ export class Store<T> {
   }
 
   /**
+   * Adds a middleware function to the store's pipeline at runtime.
+   * Useful for integrating third-party tools (e.g. DevTools) after store creation.
+   *
+   * @param mw - Middleware to append
+   */
+  addMiddleware(mw: Middleware<T>): void {
+    this.middleware.push(mw);
+  }
+
+  /**
    * Returns the names of all registered action handlers.
    */
   getActionNames(): string[] {
@@ -243,7 +253,7 @@ export class Store<T> {
     subscribers.add(listener as Subscriber<unknown>);
 
     return () => {
-      subscribers.delete(listener);
+      subscribers.delete(listener as Subscriber<unknown>);
       if (subscribers.size === 0) {
         this.selectiveSubscribers.delete(selector);
       }

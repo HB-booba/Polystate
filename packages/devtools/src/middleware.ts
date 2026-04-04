@@ -171,13 +171,10 @@ export function createDevToolsMiddleware<T>(
  */
 export function connectDevTools<T>(store: Store<T>, config: DevToolsConfig = {}): Store<T> {
   // createDevToolsMiddleware initializes the DevTools connection (init + subscribe) immediately.
-  // We then inject the returned per-action middleware into the store's pipeline so that
-  // every future dispatch records the action and state in the DevTools panel.
+  // We then inject the returned per-action middleware into the store's pipeline via the
+  // public addMiddleware() API so every future dispatch is recorded in the DevTools panel.
   const mw = createDevToolsMiddleware(store, config);
-  // Access the internal middleware array. The Store class keeps it private, but
-  // connectDevTools is a first-party utility that legitimately needs to extend it.
-  const storeInternal = store as unknown as { middleware: Array<(ctx: unknown) => void> };
-  storeInternal.middleware.push(mw as (ctx: unknown) => void);
+  store.addMiddleware(mw);
   return store;
 }
 

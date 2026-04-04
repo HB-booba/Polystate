@@ -74,7 +74,7 @@ import { TodoFacade } from './store/facade';
 
         <!-- Stats -->
         <div
-          *ngIf="(filteredTodos$ | async)?.length && (filteredTodos$ | async)?.length > 0"
+          *ngIf="(filteredTodos$ | async)?.length"
           class="stats"
         >
           <span>{{ activeTodoCount$ | async }} active</span>

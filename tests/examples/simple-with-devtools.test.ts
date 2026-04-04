@@ -16,8 +16,8 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createStore, loggerMiddleware } from '@polystate/core';
 import type { ActionMap } from '@polystate/core';
+import { createStore, loggerMiddleware } from '@polystate/core';
 import { connectDevTools } from '@polystate/devtools';
 
 // ── State ──────────────────────────────────────────────────────────────────
