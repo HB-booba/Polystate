@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polystate — Framework-Agnostic State Management</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #e5e5e5;
+      line-height: 1.6;
+    }
+
+    .background-orbs {
+      display: none;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Header/Navigation */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 60px;
+      padding: 20px 0;
+      border-bottom: 1px solid #1f1f1f;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: #a1a1a1;
+      text-decoration: none;
+      transition: color 0.2s;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      color: #fff;
+    }
+
+    /* Hero Section */
+    .hero {
+      margin-bottom: 80px;
+      text-align: center;
+      padding: 40px 0;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 16px;
+      color: #fff;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    .hero p {
+      font-size: 1.125rem;
+      color: #a1a1a1;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: #fff;
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background: #f5f5f5;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #fff;
+      border: 1px solid #333;
+    }
+
+    .btn-secondary:hover {
+      background: #1a1a1a;
+      border-color: #4a4a4a;
+    }
+
+    /* Features Grid */
+    .features {
+      margin: 100px 0;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 50px;
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 60px;
+    }
+
+    .feature-card {
+      background: #111111;
+      border: 1px solid #1f1f1f;
+      border-radius: 8px;
+      padding: 32px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .feature-card:hover {
+      border-color: #3a3a3a;
+      background: #1a1a1a;
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.125rem;
+      margin-bottom: 12px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .feature-card p {
+      color: #a1a1a1;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    /* Stats Section */
+    .stats {
+      background: #111111;
+      border: 1px solid #1f1f1f;
+      border-radius: 8px;
+      padding: 60px;
+      margin: 80px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 40px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-label {
+      color: #a1a1a1;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    /* Two Paths Section */
+    .paths {
+      margin: 100px 0;
+    }
+
+    .paths-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 60px;
+    }
+
+    @media (max-width: 768px) {
+      .paths-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .path-card {
+      background: #111111;
+      border: 1px solid #1f1f1f;
+      border-radius: 8px;
+      padding: 40px;
+      transition: all 0.2s;
+    }
+
+    .path-card:hover {
+      border-color: #3a3a3a;
+      background: #1a1a1a;
+    }
+
+    .path-title {
+      font-size: 1.375rem;
+      margin-bottom: 20px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .path-card > p {
+      color: #a1a1a1;
+      margin-bottom: 20px;
+      font-size: 0.875rem;
+    }
+
+    .path-steps {
+      list-style: none;
+    }
+
+    .path-steps li {
+      padding: 8px 0;
+      padding-left: 24px;
+      color: #a1a1a1;
+      position: relative;
+      font-size: 0.875rem;
+    }
+
+    .path-steps li::before {
+      content: '–';
+      position: absolute;
+      left: 0;
+      color: #a1a1a1;
+    }
+
+    /* Comparison Table */
+    .comparison {
+      margin: 100px 0;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #111111;
+      border: 1px solid #1f1f1f;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .comparison-table th {
+      background: #1a1a1a;
+      color: #fff;
+      padding: 16px 20px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border-bottom: 1px solid #1f1f1f;
+    }
+
+    .comparison-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid #1f1f1f;
+      color: #a1a1a1;
+      font-size: 0.875rem;
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .comparison-table tr:hover {
+      background: #1a1a1a;
+    }
+
+    .check {
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    .cross {
+      color: #a1a1a1;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 100px;
+      padding: 60px 0;
+      border-top: 1px solid #1f1f1f;
+      text-align: center;
+    }
+
+    .footer-content {
+      margin-bottom: 40px;
+    }
+
+    .footer-content h2 {
+      font-size: 1.75rem;
+      margin-bottom: 16px;
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .footer-content p {
+      color: #a1a1a1;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .social-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #111111;
+      border: 1px solid #1f1f1f;
+      border-radius: 6px;
+      color: #a1a1a1;
+      text-decoration: none;
+      transition: all 0.2s;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .social-btn:hover {
+      background: #1a1a1a;
+      border-color: #3a3a3a;
+      color: #fff;
+    }
+
+    .github-btn {
+      background: #fff;
+      color: #000;
+      border: 1px solid #fff;
+    }
+
+    .github-btn:hover {
+      background: #f5f5f5;
+      border-color: #f5f5f5;
+    }
+
+    .footer-text {
+      color: #666;
+      font-size: 0.8rem;
+      margin-top: 40px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .nav-links {
+        gap: 20px;
+        font-size: 0.8rem;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .stats {
+        padding: 40px 20px;
+        gap: 30px;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+      }
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body>
+  <div class="background-orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo">⚡ Polystate</div>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#paths">How It Works</a></li>
+          <li><a href="#comparison">Compare</a></li>
+          <li><a href="#footer">Get Started</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <h1>One Store Definition.<br>Multiple Frameworks.</h1>
+      <p>Stop rewriting Redux for React and NgRx for Angular.<br>Define once, generate everywhere.</p>
+      <div class="cta-buttons">
+        <a href="https://github.com/HB-booba/Polystate" target="_blank" class="btn btn-primary">
+          🚀 View on GitHub
+        </a>
+        <a href="#features" class="btn btn-secondary">Learn More</a>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+      <div class="stat">
+        <div class="stat-number">8</div>
+        <div class="stat-label">Packages Published</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">0</div>
+        <div class="stat-label">Core Dependencies</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">157kb</div>
+        <div class="stat-label">Bundle Size</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">v1.0.0</div>
+        <div class="stat-label">Production Ready</div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+      <h2 class="section-title">Why Choose Polystate?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📦</div>
+          <h3>Code Generation</h3>
+          <p>Define your store once. Automatically generate Redux or NgRx code with zero manual edits.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3>Framework Agnostic</h3>
+          <p>Write once, use with React 18+, Angular 17+, or vanilla JavaScript. Your choice.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Zero Dependencies</h3>
+          <p>@polystate/core has ZERO runtime dependencies. Lightweight and blazing fast.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Type Safe</h3>
+          <p>Full TypeScript support in strict mode. Compile-time action validation. No runtime surprises.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🛠️</div>
+          <h3>DevTools Ready</h3>
+          <p>Redux DevTools integration with time-travel debugging. Perfect for enterprise development.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Middleware System</h3>
+          <p>Built-in middleware for logging, persistence, custom side effects. Extensible architecture.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Two Paths Section -->
+    <section class="paths" id="paths">
+      <h2 class="section-title">Two Ways to Use Polystate</h2>
+      <div class="paths-grid">
+        <div class="path-card">
+          <h3 class="path-title">📝 Code Generation</h3>
+          <p style="color: #b0b0b0; margin-bottom: 20px;">Perfect for production apps</p>
+          <ul class="path-steps">
+            <li>Define store.definition.ts</li>
+            <li>Run polystate generate</li>
+            <li>Get Redux/NgRx code</li>
+            <li>Type-safe dispatch</li>
+            <li>Ready to ship</li>
+          </ul>
+        </div>
+        <div class="path-card">
+          <h3 class="path-title">⚙️ Runtime Adapters</h3>
+          <p style="color: #b0b0b0; margin-bottom: 20px;">Perfect for prototyping</p>
+          <ul class="path-steps">
+            <li>createStore() with actions</li>
+            <li>Use React hooks or Angular services</li>
+            <li>No build step needed</li>
+            <li>Fast iteration</li>
+            <li>Seamless debugging</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section class="comparison" id="comparison">
+      <h2 class="section-title">How Polystate Compares</h2>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Polystate</th>
+            <th>Redux</th>
+            <th>Zustand</th>
+            <th>NgRx</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Framework Agnostic</strong></td>
+            <td class="check">✓</td>
+            <td class="cross">React only</td>
+            <td class="cross">React only</td>
+            <td class="cross">Angular only</td>
+          </tr>
+          <tr>
+            <td><strong>Code Generation</strong></td>
+            <td class="check">✓ Built-in</td>
+            <td class="cross">❌</td>
+            <td class="cross">❌</td>
+            <td class="cross">⚠️ Schematics</td>
+          </tr>
+          <tr>
+            <td><strong>Core Dependencies</strong></td>
+            <td class="check">0</td>
+            <td class="cross">High</td>
+            <td>Low</td>
+            <td class="cross">3+</td>
+          </tr>
+          <tr>
+            <td><strong>TypeScript Support</strong></td>
+            <td class="check">✓ Strict</td>
+            <td>Good</td>
+            <td>Good</td>
+            <td class="check">✓ Excellent</td>
+          </tr>
+          <tr>
+            <td><strong>DevTools</strong></td>
+            <td class="check">✓</td>
+            <td class="check">✓</td>
+            <td class="check">✓</td>
+            <td class="check">✓</td>
+          </tr>
+          <tr>
+            <td><strong>Learning Curve</strong></td>
+            <td>Medium</td>
+            <td class="cross">Steep</td>
+            <td class="check">Easy</td>
+            <td class="cross">Steep</td>
+          </tr>
+          <tr>
+            <td><strong>Bundle Size</strong></td>
+            <td>~157kb</td>
+            <td class="cross">~290kb</td>
+            <td class="check">~95kb</td>
+            <td class="cross">~180kb</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+      <div class="footer-content">
+        <h2>Ready to Simplify State Management?</h2>
+        <p>Join developers building type-safe, framework-agnostic apps with Polystate.</p>
+        <div class="social-links">
+          <a href="https://github.com/HB-booba/Polystate" target="_blank" class="social-btn github-btn">
+            ⭐ Star on GitHub
+          </a>
+          <a href="https://www.npmjs.com/package/@polystate/core" target="_blank" class="social-btn">
+            📦 npm Package
+          </a>
+          <a href="https://github.com/HB-booba/Polystate/issues" target="_blank" class="social-btn">
+            💬 GitHub Discussions
+          </a>
+        </div>
+        <div class="footer-text">
+          <p>© 2026 Polystate. Made with ⚡ for developers who value simplicity.</p>
+          <p style="margin-top: 10px; color: #555;">v1.0.0 • Production Ready • Framework Agnostic</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
