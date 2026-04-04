@@ -50,30 +50,6 @@ export function loggerMiddleware<T = unknown>(): Middleware<T> {
 }
 
 /**
- * Thunk middleware - enables async actions.
- *
- * @template T - The store state type
- * @returns Thunk middleware
- *
- * @example
- * ```typescript
- * const thunkAction = async (dispatch, getState) => {
- *   const state = getState();
- *   const result = await fetch('/api/data');
- *   dispatch('setData', result);
- * };
- *
- * store.dispatch(thunkAction);
- * ```
- */
-export function thunkMiddleware<T = unknown>(): Middleware<T> {
-  return async (_context: MiddlewareContext<T>) => {
-    // Thunk middleware doesn't need to do anything on success
-    // The actual thunk execution is handled by the store
-  };
-}
-
-/**
  * Persistence middleware - automatically saves state to storage.
  *
  * @template T - The store state type
@@ -137,42 +113,4 @@ export function loadPersistedState<T>(
     console.error(`Failed to load persisted state from "${key}":`, error);
     return null;
   }
-}
-
-/**
- * DevTools middleware - integrates with Redux DevTools Extension.
- * Enables basic action inspection without time-travel.
- *
- * @deprecated Use `createDevToolsMiddleware(store, config)` from `@polystate/devtools`
- * instead — it supports full time-travel debugging via `store.setState()`.
- *
- * @template T - The store state type
- * @param name - Store name in DevTools
- * @returns DevTools middleware
- *
- * @example
- * ```typescript
- * // Preferred:
- * import { createDevToolsMiddleware } from '@polystate/devtools';
- * const store = createStore(state, actions, {
- *   middleware: [createDevToolsMiddleware(store, { name: 'TodoStore' })]
- * });
- * ```
- */
-export function devToolsMiddleware<T = unknown>(name: string = 'Store'): Middleware<T> {
-  type WindowWithDevTools = typeof window & {
-    __REDUX_DEVTOOLS_EXTENSION__?: (config: { name: string }) => {
-      send(action: unknown, state: unknown): void;
-    };
-  };
-  const devtools =
-    typeof window !== 'undefined'
-      ? (window as WindowWithDevTools).__REDUX_DEVTOOLS_EXTENSION__?.({ name })
-      : null;
-
-  return (context: MiddlewareContext<T>) => {
-    if (devtools) {
-      devtools.send({ type: context.action, payload: context.payload }, context.nextState);
-    }
-  };
 }

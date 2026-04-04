@@ -25,13 +25,7 @@ export { composeSlices, createSlice, prefixActions } from './slice';
 export type { Slice, SliceOptions } from './slice';
 
 // Middleware
-export {
-  devToolsMiddleware,
-  loadPersistedState,
-  loggerMiddleware,
-  persistMiddleware,
-  thunkMiddleware,
-} from './middleware';
+export { loadPersistedState, loggerMiddleware, persistMiddleware } from './middleware';
 export type { Middleware, MiddlewareContext } from './middleware';
 
 // RxJS compatibility

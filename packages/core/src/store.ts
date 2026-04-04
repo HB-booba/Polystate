@@ -71,9 +71,9 @@ export type ThunkAction<T = unknown> = (
  * store.dispatch('increment'); // { count: 1 }
  * ```
  */
-export class Store<T> {
+export class Store<T, A extends ActionMap<T> = ActionMap<T>> {
   private signal: Signal<T>;
-  private actions: ActionMap<T>;
+  private actions: A;
   private middleware: Middleware<T>[];
   private globalSubscribers: Set<Subscriber<T>> = new Set();
   private selectiveSubscribers: Map<Selector<T, unknown>, Set<Subscriber<unknown>>> = new Map();
@@ -86,7 +86,7 @@ export class Store<T> {
    * @param actions - Action map with handler functions
    * @param options - Optional configuration
    */
-  constructor(initialState: T, actions: ActionMap<T>, options?: StoreOptions<T>) {
+  constructor(initialState: T, actions: A, options?: StoreOptions<T>) {
     this.initialState = initialState;
     this.signal = new Signal(initialState);
     this.actions = actions;
@@ -118,17 +118,23 @@ export class Store<T> {
   }
 
   /**
-   * Dispatches an action.
-   * @param action - Action name or thunk function
-   * @param payload - Optional payload for the action
+   * Dispatches an action to the store. Action names are type-checked at compile
+   * time — dispatching an unregistered action is a TypeScript error, not a
+   * silent runtime warning.
+   *
+   * @param action - Registered action name or thunk function
+   * @param payload - Optional payload forwarded to the action handler
    */
-  async dispatch(action: string | ThunkAction<T>, payload?: unknown): Promise<void> {
+  dispatch(action: (keyof A & string) | ThunkAction<T>, payload?: unknown): Promise<void> {
+    return this._dispatch(action, payload);
+  }
+
+  private async _dispatch(action: string | ThunkAction<T>, payload?: unknown): Promise<void> {
     if (this._destroyed) return;
 
-    // Handle thunk actions
     if (typeof action === 'function') {
       return action(
-        (name: string | ThunkAction<T>, data?: unknown) => this.dispatch(name, data),
+        (name, data) => this._dispatch(name, data),
         () => this.getState()
       ) as Promise<void>;
     }
@@ -144,20 +150,18 @@ export class Store<T> {
     const nextState = handler(prevState, payload);
     this.signal.value = nextState;
 
-    // Run middleware
     const context: MiddlewareContext<T> = {
       action,
       payload,
       prevState,
       nextState,
-      dispatch: (name: string, data?: unknown) => this.dispatch(name, data),
+      dispatch: (name: string, data?: unknown) => this._dispatch(name, data),
     };
 
-    for (const middlewareHandler of this.middleware) {
-      await middlewareHandler(context);
+    for (const mw of this.middleware) {
+      await mw(context);
     }
 
-    // Notify subscribers
     this.notifySubscribers(prevState, nextState, action);
   }
 
@@ -306,10 +310,10 @@ export class Store<T> {
  * );
  * ```
  */
-export function createStore<T>(
+export function createStore<T, A extends ActionMap<T>>(
   initialState: T,
-  actions: ActionMap<T>,
+  actions: A,
   options?: StoreOptions<T>
-): Store<T> {
+): Store<T, A> {
   return new Store(initialState, actions, options);
 }
