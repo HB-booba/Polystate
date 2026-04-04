@@ -4,5 +4,4 @@
  */
 
 // CLI package is command-oriented and does not expose a programmatic API yet.
-export { };
-
+export {};

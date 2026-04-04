@@ -9,12 +9,12 @@
 
 import type { ActionAST, AsyncActionAST, FieldAST, StoreAST } from '@polystate/definition';
 import {
-    Node,
-    ObjectLiteralExpression,
-    Project,
-    PropertyAssignment,
-    SourceFile,
-    SyntaxKind,
+  Node,
+  ObjectLiteralExpression,
+  Project,
+  PropertyAssignment,
+  SourceFile,
+  SyntaxKind,
 } from 'ts-morph';
 
 // ============================================================================
@@ -29,27 +29,27 @@ import {
  * @throws If no valid definition object can be located.
  */
 export function parseDefinitionFile(filePath: string): StoreAST {
-    const project = new Project({
-        addFilesFromTsConfig: false,
-        skipFileDependencyResolution: true,
-        compilerOptions: {
-            allowJs: true,
-            resolveJsonModule: true,
-            strict: false,
-        },
-    });
+  const project = new Project({
+    addFilesFromTsConfig: false,
+    skipFileDependencyResolution: true,
+    compilerOptions: {
+      allowJs: true,
+      resolveJsonModule: true,
+      strict: false,
+    },
+  });
 
-    const sourceFile = project.addSourceFileAtPath(filePath);
+  const sourceFile = project.addSourceFileAtPath(filePath);
 
-    const defObject = findStoreDefinitionObject(sourceFile);
-    if (!defObject) {
-        throw new Error(
-            `Could not find a StoreDefinition object literal in "${filePath}". ` +
-            `Make sure the file exports a StoreDefinition object with name, initialState, and actions properties.`
-        );
-    }
+  const defObject = findStoreDefinitionObject(sourceFile);
+  if (!defObject) {
+    throw new Error(
+      `Could not find a StoreDefinition object literal in "${filePath}". ` +
+        `Make sure the file exports a StoreDefinition object with name, initialState, and actions properties.`
+    );
+  }
 
-    return extractStoreAST(defObject);
+  return extractStoreAST(defObject);
 }
 
 // ============================================================================
@@ -60,28 +60,24 @@ export function parseDefinitionFile(filePath: string): StoreAST {
  * Locate the first object literal that has both `name`, `initialState`, and
  * `actions` properties — this is the StoreDefinition.
  */
-function findStoreDefinitionObject(
-    sourceFile: SourceFile
-): ObjectLiteralExpression | null {
-    let found: ObjectLiteralExpression | null = null;
+function findStoreDefinitionObject(sourceFile: SourceFile): ObjectLiteralExpression | null {
+  let found: ObjectLiteralExpression | null = null;
 
-    sourceFile.forEachDescendant((node) => {
-        if (found) return; // already found
-        if (!Node.isObjectLiteralExpression(node)) return;
+  sourceFile.forEachDescendant((node) => {
+    if (found) return; // already found
+    if (!Node.isObjectLiteralExpression(node)) return;
 
-        const props = node.getProperties();
-        const keys = new Set(
-            props
-                .filter(Node.isPropertyAssignment)
-                .map((p) => (p as PropertyAssignment).getName())
-        );
+    const props = node.getProperties();
+    const keys = new Set(
+      props.filter(Node.isPropertyAssignment).map((p) => (p as PropertyAssignment).getName())
+    );
 
-        if (keys.has('name') && keys.has('initialState') && keys.has('actions')) {
-            found = node as ObjectLiteralExpression;
-        }
-    });
+    if (keys.has('name') && keys.has('initialState') && keys.has('actions')) {
+      found = node as ObjectLiteralExpression;
+    }
+  });
 
-    return found;
+  return found;
 }
 
 /**
@@ -89,37 +85,29 @@ function findStoreDefinitionObject(
  * represents a StoreDefinition.
  */
 function extractStoreAST(obj: ObjectLiteralExpression): StoreAST {
-    const nameNode = getProperty(obj, 'name');
-    const descNode = getProperty(obj, 'description');
-    const initialStateNode = getProperty(obj, 'initialState');
-    const actionsNode = getProperty(obj, 'actions');
-    const asyncActionsNode = getProperty(obj, 'asyncActions');
+  const nameNode = getProperty(obj, 'name');
+  const descNode = getProperty(obj, 'description');
+  const initialStateNode = getProperty(obj, 'initialState');
+  const actionsNode = getProperty(obj, 'actions');
+  const asyncActionsNode = getProperty(obj, 'asyncActions');
 
-    if (!nameNode || !initialStateNode || !actionsNode) {
-        throw new Error('StoreDefinition is missing required properties: name, initialState, actions');
-    }
+  if (!nameNode || !initialStateNode || !actionsNode) {
+    throw new Error('StoreDefinition is missing required properties: name, initialState, actions');
+  }
 
-    const name = getStringLiteralValue(nameNode.getInitializer()!);
-    const description = descNode
-        ? getStringLiteralValue(descNode.getInitializer()!)
-        : undefined;
+  const name = getStringLiteralValue(nameNode.getInitializer()!);
+  const description = descNode ? getStringLiteralValue(descNode.getInitializer()!) : undefined;
 
-    const initialStateExpr = initialStateNode.getInitializer();
-    const fields = initialStateExpr
-        ? extractFields(initialStateExpr)
-        : [];
+  const initialStateExpr = initialStateNode.getInitializer();
+  const fields = initialStateExpr ? extractFields(initialStateExpr) : [];
 
-    const actionsExpr = actionsNode.getInitializer();
-    const actions = actionsExpr
-        ? extractActions(actionsExpr)
-        : [];
+  const actionsExpr = actionsNode.getInitializer();
+  const actions = actionsExpr ? extractActions(actionsExpr) : [];
 
-    const asyncActionsExpr = asyncActionsNode?.getInitializer();
-    const asyncActions = asyncActionsExpr
-        ? extractAsyncActions(asyncActionsExpr)
-        : [];
+  const asyncActionsExpr = asyncActionsNode?.getInitializer();
+  const asyncActions = asyncActionsExpr ? extractAsyncActions(asyncActionsExpr) : [];
 
-    return { name, description, fields, actions, asyncActions };
+  return { name, description, fields, actions, asyncActions };
 }
 
 // ============================================================================
@@ -127,35 +115,35 @@ function extractStoreAST(obj: ObjectLiteralExpression): StoreAST {
 // ============================================================================
 
 function extractFields(node: Node): FieldAST[] {
-    if (!Node.isObjectLiteralExpression(node)) return [];
+  if (!Node.isObjectLiteralExpression(node)) return [];
 
-    return node
-        .getProperties()
-        .filter(Node.isPropertyAssignment)
-        .map((prop) => extractField(prop as PropertyAssignment));
+  return node
+    .getProperties()
+    .filter(Node.isPropertyAssignment)
+    .map((prop) => extractField(prop as PropertyAssignment));
 }
 
 function extractField(prop: PropertyAssignment): FieldAST {
-    const name = prop.getName();
-    const initializer = prop.getInitializer();
+  const name = prop.getName();
+  const initializer = prop.getInitializer();
 
-    let typeAnnotation: string | null = null;
-    let initialValue: unknown = undefined;
+  let typeAnnotation: string | null = null;
+  let initialValue: unknown = undefined;
 
-    if (initializer) {
-        // Check for `<type>value` or `value as type` cast — extract the type text.
-        if (Node.isAsExpression(initializer)) {
-            typeAnnotation = initializer.getTypeNode()?.getText() ?? null;
-            initialValue = nodeToValue(initializer.getExpression());
-        } else if (Node.isTypeAssertion(initializer)) {
-            typeAnnotation = initializer.getTypeNode().getText();
-            initialValue = nodeToValue(initializer.getExpression());
-        } else {
-            initialValue = nodeToValue(initializer);
-        }
+  if (initializer) {
+    // Check for `<type>value` or `value as type` cast — extract the type text.
+    if (Node.isAsExpression(initializer)) {
+      typeAnnotation = initializer.getTypeNode()?.getText() ?? null;
+      initialValue = nodeToValue(initializer.getExpression());
+    } else if (Node.isTypeAssertion(initializer)) {
+      typeAnnotation = initializer.getTypeNode().getText();
+      initialValue = nodeToValue(initializer.getExpression());
+    } else {
+      initialValue = nodeToValue(initializer);
     }
+  }
 
-    return { name, typeAnnotation, initialValue };
+  return { name, typeAnnotation, initialValue };
 }
 
 // ============================================================================
@@ -163,59 +151,59 @@ function extractField(prop: PropertyAssignment): FieldAST {
 // ============================================================================
 
 function extractActions(node: Node): ActionAST[] {
-    if (!Node.isObjectLiteralExpression(node)) return [];
+  if (!Node.isObjectLiteralExpression(node)) return [];
 
-    return node
-        .getProperties()
-        .filter(Node.isPropertyAssignment)
-        .map((prop) => extractAction(prop as PropertyAssignment));
+  return node
+    .getProperties()
+    .filter(Node.isPropertyAssignment)
+    .map((prop) => extractAction(prop as PropertyAssignment));
 }
 
 function extractAction(prop: PropertyAssignment): ActionAST {
-    const actionName = prop.getName();
-    const initializer = prop.getInitializer();
+  const actionName = prop.getName();
+  const initializer = prop.getInitializer();
 
-    if (!initializer) {
-        throw new Error(`Action "${actionName}" has no initializer`);
-    }
+  if (!initializer) {
+    throw new Error(`Action "${actionName}" has no initializer`);
+  }
 
-    const arrowFn = Node.isArrowFunction(initializer) ? initializer : null;
-    if (!arrowFn) {
-        throw new Error(
-            `Action "${actionName}" must be an arrow function, got ${initializer.getKindName()}`
-        );
-    }
+  const arrowFn = Node.isArrowFunction(initializer) ? initializer : null;
+  if (!arrowFn) {
+    throw new Error(
+      `Action "${actionName}" must be an arrow function, got ${initializer.getKindName()}`
+    );
+  }
 
-    const params = arrowFn.getParameters();
-    const stateParam = params[0];
-    const payloadParam = params[1];
+  const params = arrowFn.getParameters();
+  const stateParam = params[0];
+  const payloadParam = params[1];
 
-    if (!stateParam) {
-        throw new Error(`Action "${actionName}" must have at least one parameter (state)`);
-    }
+  if (!stateParam) {
+    throw new Error(`Action "${actionName}" must have at least one parameter (state)`);
+  }
 
-    const stateParamName = stateParam.getName();
+  const stateParamName = stateParam.getName();
 
-    let payloadParamName: string | null = null;
-    let payloadType: string | null = null;
+  let payloadParamName: string | null = null;
+  let payloadType: string | null = null;
 
-    if (payloadParam) {
-        payloadParamName = payloadParam.getName();
-        const typeNode = payloadParam.getTypeNode();
-        payloadType = typeNode ? typeNode.getText() : null;
-    }
+  if (payloadParam) {
+    payloadParamName = payloadParam.getName();
+    const typeNode = payloadParam.getTypeNode();
+    payloadType = typeNode ? typeNode.getText() : null;
+  }
 
-    // Capture the body text exactly as written in source
-    const body = arrowFn.getBody();
-    const handlerBody = body.getText();
+  // Capture the body text exactly as written in source
+  const body = arrowFn.getBody();
+  const handlerBody = body.getText();
 
-    return {
-        name: actionName,
-        payloadType,
-        payloadParamName,
-        stateParamName,
-        handlerBody,
-    };
+  return {
+    name: actionName,
+    payloadType,
+    payloadParamName,
+    stateParamName,
+    handlerBody,
+  };
 }
 
 // ============================================================================
@@ -223,93 +211,92 @@ function extractAction(prop: PropertyAssignment): ActionAST {
 // ============================================================================
 
 function extractAsyncActions(node: Node): AsyncActionAST[] {
-    if (!Node.isObjectLiteralExpression(node)) return [];
+  if (!Node.isObjectLiteralExpression(node)) return [];
 
-    return node
-        .getProperties()
-        .filter(Node.isPropertyAssignment)
-        .map((prop) => extractAsyncAction(prop as PropertyAssignment));
+  return node
+    .getProperties()
+    .filter(Node.isPropertyAssignment)
+    .map((prop) => extractAsyncAction(prop as PropertyAssignment));
 }
 
 function extractAsyncAction(prop: PropertyAssignment): AsyncActionAST {
-    const actionName = prop.getName();
-    const initializer = prop.getInitializer();
+  const actionName = prop.getName();
+  const initializer = prop.getInitializer();
 
-    if (!initializer) {
-        throw new Error(`Async action "${actionName}" has no initializer`);
+  if (!initializer) {
+    throw new Error(`Async action "${actionName}" has no initializer`);
+  }
+
+  const arrowFn = Node.isArrowFunction(initializer) ? initializer : null;
+  if (!arrowFn) {
+    throw new Error(
+      `Async action "${actionName}" must be an async arrow function, got ${initializer.getKindName()}`
+    );
+  }
+
+  const params = arrowFn.getParameters();
+  const payloadParam = params[0]; // async actions take optional payload as first (only) param
+
+  let payloadParamName: string | null = null;
+  let payloadType: string | null = null;
+
+  if (payloadParam) {
+    payloadParamName = payloadParam.getName();
+    const typeNode = payloadParam.getTypeNode();
+    payloadType = typeNode ? typeNode.getText() : null;
+  }
+
+  // Extract explicit return type annotation if present
+  const returnTypeNode = arrowFn.getReturnTypeNode();
+  const promiseReturnType = returnTypeNode ? returnTypeNode.getText() : null;
+  // Strip outer Promise<...> wrapper if present so we get the value type
+  let returnType: string | null = promiseReturnType;
+  if (promiseReturnType) {
+    const promiseMatch = promiseReturnType.match(/^Promise<(.+)>$/s);
+    if (promiseMatch) {
+      returnType = promiseMatch[1]!.trim();
     }
+  }
 
-    const arrowFn = Node.isArrowFunction(initializer) ? initializer : null;
-    if (!arrowFn) {
-        throw new Error(
-            `Async action "${actionName}" must be an async arrow function, got ${initializer.getKindName()}`
-        );
-    }
+  const body = arrowFn.getBody();
+  const handlerBody = body.getText();
 
-    const params = arrowFn.getParameters();
-    const payloadParam = params[0]; // async actions take optional payload as first (only) param
-
-    let payloadParamName: string | null = null;
-    let payloadType: string | null = null;
-
-    if (payloadParam) {
-        payloadParamName = payloadParam.getName();
-        const typeNode = payloadParam.getTypeNode();
-        payloadType = typeNode ? typeNode.getText() : null;
-    }
-
-    // Extract explicit return type annotation if present
-    const returnTypeNode = arrowFn.getReturnTypeNode();
-    const promiseReturnType = returnTypeNode ? returnTypeNode.getText() : null;
-    // Strip outer Promise<...> wrapper if present so we get the value type
-    let returnType: string | null = promiseReturnType;
-    if (promiseReturnType) {
-        const promiseMatch = promiseReturnType.match(/^Promise<(.+)>$/s);
-        if (promiseMatch) {
-            returnType = promiseMatch[1]!.trim();
-        }
-    }
-
-    const body = arrowFn.getBody();
-    const handlerBody = body.getText();
-
-    return {
-        name: actionName,
-        payloadType,
-        payloadParamName,
-        returnType,
-        handlerBody,
-    };
+  return {
+    name: actionName,
+    payloadType,
+    payloadParamName,
+    returnType,
+    handlerBody,
+  };
 }
 
 // ============================================================================
 // Utility: get a named PropertyAssignment from an ObjectLiteralExpression
 // ============================================================================
 
-function getProperty(
-    obj: ObjectLiteralExpression,
-    name: string
-): PropertyAssignment | null {
-    const prop = obj
-        .getProperties()
-        .find(
-            (p): p is PropertyAssignment =>
-                Node.isPropertyAssignment(p) && (p as PropertyAssignment).getName() === name
-        );
-    return prop ?? null;
+function getProperty(obj: ObjectLiteralExpression, name: string): PropertyAssignment | null {
+  const prop = obj
+    .getProperties()
+    .find(
+      (p): p is PropertyAssignment =>
+        Node.isPropertyAssignment(p) && (p as PropertyAssignment).getName() === name
+    );
+  return prop ?? null;
 }
 
 function getStringLiteralValue(node: Node): string {
-    if (Node.isStringLiteral(node)) {
-        return node.getLiteralValue();
-    }
-    // Fallback: strip surrounding quotes from raw text
-    const text = node.getText().trim();
-    if ((text.startsWith("'") && text.endsWith("'")) ||
-        (text.startsWith('"') && text.endsWith('"'))) {
-        return text.slice(1, -1);
-    }
-    return text;
+  if (Node.isStringLiteral(node)) {
+    return node.getLiteralValue();
+  }
+  // Fallback: strip surrounding quotes from raw text
+  const text = node.getText().trim();
+  if (
+    (text.startsWith("'") && text.endsWith("'")) ||
+    (text.startsWith('"') && text.endsWith('"'))
+  ) {
+    return text.slice(1, -1);
+  }
+  return text;
 }
 
 /**
@@ -317,35 +304,35 @@ function getStringLiteralValue(node: Node): string {
  * Only needs to handle JSON-representable values (no runtime expressions).
  */
 function nodeToValue(node: Node): unknown {
-    if (Node.isStringLiteral(node)) return node.getLiteralValue();
-    if (Node.isNumericLiteral(node)) return Number(node.getLiteralValue());
-    if (node.getKind() === SyntaxKind.TrueKeyword) return true;
-    if (node.getKind() === SyntaxKind.FalseKeyword) return false;
-    if (node.getKind() === SyntaxKind.NullKeyword) return null;
-    if (Node.isArrayLiteralExpression(node)) {
-        return node.getElements().map((el) => nodeToValue(el));
+  if (Node.isStringLiteral(node)) return node.getLiteralValue();
+  if (Node.isNumericLiteral(node)) return Number(node.getLiteralValue());
+  if (node.getKind() === SyntaxKind.TrueKeyword) return true;
+  if (node.getKind() === SyntaxKind.FalseKeyword) return false;
+  if (node.getKind() === SyntaxKind.NullKeyword) return null;
+  if (Node.isArrayLiteralExpression(node)) {
+    return node.getElements().map((el) => nodeToValue(el));
+  }
+  if (Node.isObjectLiteralExpression(node)) {
+    const result: Record<string, unknown> = {};
+    for (const prop of node.getProperties()) {
+      if (Node.isPropertyAssignment(prop)) {
+        result[prop.getName()] = nodeToValue(prop.getInitializer()!);
+      }
     }
-    if (Node.isObjectLiteralExpression(node)) {
-        const result: Record<string, unknown> = {};
-        for (const prop of node.getProperties()) {
-            if (Node.isPropertyAssignment(prop)) {
-                result[prop.getName()] = nodeToValue(prop.getInitializer()!);
-            }
-        }
-        return result;
+    return result;
+  }
+  if (Node.isAsExpression(node)) {
+    return nodeToValue(node.getExpression());
+  }
+  if (Node.isTypeAssertion(node)) {
+    return nodeToValue(node.getExpression());
+  }
+  // Prefix expressions like -1
+  if (Node.isPrefixUnaryExpression(node)) {
+    const operand = nodeToValue(node.getOperand());
+    if (node.getOperatorToken() === SyntaxKind.MinusToken && typeof operand === 'number') {
+      return -operand;
     }
-    if (Node.isAsExpression(node)) {
-        return nodeToValue(node.getExpression());
-    }
-    if (Node.isTypeAssertion(node)) {
-        return nodeToValue(node.getExpression());
-    }
-    // Prefix expressions like -1
-    if (Node.isPrefixUnaryExpression(node)) {
-        const operand = nodeToValue(node.getOperand());
-        if (node.getOperatorToken() === SyntaxKind.MinusToken && typeof operand === 'number') {
-            return -operand;
-        }
-    }
-    return undefined;
+  }
+  return undefined;
 }

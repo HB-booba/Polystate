@@ -4,6 +4,10 @@
  */
 
 export {
-    generateHooks, generateHooksFromAST, generateReduxStore, generateReduxStoreFromAST, generateTypes, generateTypesFromAST
+  generateHooks,
+  generateHooksFromAST,
+  generateReduxStore,
+  generateReduxStoreFromAST,
+  generateTypes,
+  generateTypesFromAST,
 } from './generator';
-

@@ -4,10 +4,19 @@
  */
 
 export type {
-    ActionAST, ActionHandler, ActionMap, AsyncActionAST, AsyncActionHandler, AsyncActionMap,
-    FieldAST, GenerateOptions, GenerationResult, GeneratorConfig, StoreAST, StoreDefinition,
-    ValidationResult
+  ActionAST,
+  ActionHandler,
+  ActionMap,
+  AsyncActionAST,
+  AsyncActionHandler,
+  AsyncActionMap,
+  FieldAST,
+  GenerateOptions,
+  GenerationResult,
+  GeneratorConfig,
+  StoreAST,
+  StoreDefinition,
+  ValidationResult,
 } from './types';
 
 export { extractActions, normalizeStoreDefinition, validateStoreDefinition } from './validator';
-
