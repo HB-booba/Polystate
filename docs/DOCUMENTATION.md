@@ -73,35 +73,35 @@ const store = createStore(initialState, actions, options?);
 
 ### Parameters
 
-| Parameter | Type | Description |
-|---|---|---|
-| `initialState` | `T` | The initial state value (any plain object) |
-| `actions` | `ActionMap<T>` | Map of pure functions `(state, payload?) => newState` |
-| `options` | `StoreOptions` | Optional: `{ logging?, middleware? }` |
+| Parameter      | Type           | Description                                           |
+| -------------- | -------------- | ----------------------------------------------------- |
+| `initialState` | `T`            | The initial state value (any plain object)            |
+| `actions`      | `ActionMap<T>` | Map of pure functions `(state, payload?) => newState` |
+| `options`      | `StoreOptions` | Optional: `{ logging?, middleware? }`                 |
 
 ### `StoreOptions`
 
 ```typescript
 interface StoreOptions<T> {
-  logging?: boolean;             // attaches loggerMiddleware automatically
-  middleware?: Middleware<T>[];   // custom middleware array
+  logging?: boolean; // attaches loggerMiddleware automatically
+  middleware?: Middleware<T>[]; // custom middleware array
 }
 ```
 
 ### Store Methods
 
-| Method | Signature | Notes |
-|---|---|---|
-| `getState()` | `() => T` | Full state snapshot |
-| `getState(selector)` | `(sel: (s: T) => S) => S` | Read a slice |
-| `dispatch(action, payload?)` | `(string \| ThunkFn, any?) => Promise<void>` | Dispatch named action or thunk |
-| `setState(patch)` | `(Partial<T>) => void` | Bypass action handlers — direct patch |
-| `subscribe(listener)` | `(cb: (s: T) => void) => Unsubscriber` | Global — fires on every state change |
-| `subscribe(selector, listener)` | `(sel, cb) => Unsubscriber` | Selective — fires only when `sel(state)` changes |
-| `getActionNames()` | `() => string[]` | List registered action names |
-| `addMiddleware(mw)` | `(mw: Middleware<T>) => void` | Attach middleware after creation |
-| `reset()` | `() => void` | Restore `initialState`, notify all subscribers |
-| `destroy()` | `() => void` | Clear all subscribers, block future dispatches |
+| Method                          | Signature                                    | Notes                                            |
+| ------------------------------- | -------------------------------------------- | ------------------------------------------------ |
+| `getState()`                    | `() => T`                                    | Full state snapshot                              |
+| `getState(selector)`            | `(sel: (s: T) => S) => S`                    | Read a slice                                     |
+| `dispatch(action, payload?)`    | `(string \| ThunkFn, any?) => Promise<void>` | Dispatch named action or thunk                   |
+| `setState(patch)`               | `(Partial<T>) => void`                       | Bypass action handlers — direct patch            |
+| `subscribe(listener)`           | `(cb: (s: T) => void) => Unsubscriber`       | Global — fires on every state change             |
+| `subscribe(selector, listener)` | `(sel, cb) => Unsubscriber`                  | Selective — fires only when `sel(state)` changes |
+| `getActionNames()`              | `() => string[]`                             | List registered action names                     |
+| `addMiddleware(mw)`             | `(mw: Middleware<T>) => void`                | Attach middleware after creation                 |
+| `reset()`                       | `() => void`                                 | Restore `initialState`, notify all subscribers   |
+| `destroy()`                     | `() => void`                                 | Clear all subscribers, block future dispatches   |
 
 ### Full Example
 
@@ -117,11 +117,17 @@ interface TodoState {
 const store = createStore<TodoState>(
   { todos: [], filter: 'all', loading: false },
   {
-    addTodo:    (s, text: string)  => ({ ...s, todos: [...s.todos, { id: Date.now(), text, done: false }] }),
-    toggle:     (s, id: number)    => ({ ...s, todos: s.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) }),
-    remove:     (s, id: number)    => ({ ...s, todos: s.todos.filter((t) => t.id !== id) }),
-    setFilter:  (s, f: TodoState['filter']) => ({ ...s, filter: f }),
-    setLoading: (s, loading: boolean)       => ({ ...s, loading }),
+    addTodo: (s, text: string) => ({
+      ...s,
+      todos: [...s.todos, { id: Date.now(), text, done: false }],
+    }),
+    toggle: (s, id: number) => ({
+      ...s,
+      todos: s.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
+    }),
+    remove: (s, id: number) => ({ ...s, todos: s.todos.filter((t) => t.id !== id) }),
+    setFilter: (s, f: TodoState['filter']) => ({ ...s, filter: f }),
+    setLoading: (s, loading: boolean) => ({ ...s, loading }),
   },
   { logging: true }
 );
@@ -141,13 +147,13 @@ Action handlers are **pure functions**. They receive the current state (and opti
 addTodo: (state, title: string) => ({
   ...state,
   todos: [...state.todos, { id: Date.now(), title, done: false }],
-})
+});
 
 // ❌ Wrong — mutates state
 addTodo: (state, title: string) => {
   state.todos.push({ id: Date.now(), title, done: false }); // mutation!
   return state;
-}
+};
 ```
 
 ### No-payload Actions
@@ -159,7 +165,7 @@ const store = createStore(
   { loading: false },
   {
     startLoading: (s) => ({ ...s, loading: true }),
-    stopLoading:  (s) => ({ ...s, loading: false }),
+    stopLoading: (s) => ({ ...s, loading: false }),
   }
 );
 
@@ -187,8 +193,8 @@ Fires **only** when the selected value changes (`!==`):
 
 ```typescript
 const unsub = store.subscribe(
-  (s) => s.filter,                    // selector
-  (filter) => renderFilter(filter),   // listener — only re-runs when filter changes
+  (s) => s.filter, // selector
+  (filter) => renderFilter(filter) // listener — only re-runs when filter changes
 );
 ```
 
@@ -250,19 +256,15 @@ interface MiddlewareContext<T> {
 ### Built-in Middleware
 
 ```typescript
-import {
-  loggerMiddleware,
-  persistMiddleware,
-  loadPersistedState,
-} from '@polystate/core';
+import { loggerMiddleware, persistMiddleware, loadPersistedState } from '@polystate/core';
 
 const key = 'myapp:todos';
 const saved = loadPersistedState<TodoState>(key);
 
 const store = createStore(saved ?? initialState, actions, {
   middleware: [
-    loggerMiddleware(),            // console.group for every action
-    persistMiddleware(key),        // saves nextState to localStorage on every dispatch
+    loggerMiddleware(), // console.group for every action
+    persistMiddleware(key), // saves nextState to localStorage on every dispatch
   ],
 });
 ```
@@ -299,10 +301,7 @@ const counterSlice = createSlice(
   }
 );
 
-const labelSlice = createSlice(
-  { text: 'default' },
-  { update: (s, t: string) => ({ text: t }) }
-);
+const labelSlice = createSlice({ text: 'default' }, { update: (s, t: string) => ({ text: t }) });
 
 // composeSlices extracts { initialState, actions } from each slice
 const [counterPart, labelPart] = composeSlices([counterSlice, labelSlice]);
@@ -334,8 +333,7 @@ import { asObservable, map, filter, distinctUntilChanged, take } from '@polystat
 asObservable(store).subscribe((state) => console.log(state));
 
 // Selector variant — only emits when the selector output changes
-asObservable(store, (s) => s.todos.length)
-  .subscribe((n) => console.log(n, 'todos'));
+asObservable(store, (s) => s.todos.length).subscribe((n) => console.log(n, 'todos'));
 
 // Operator chain
 asObservable(store, (s) => s.todos)
@@ -343,7 +341,7 @@ asObservable(store, (s) => s.todos)
     map((todos) => todos.filter((t) => !t.done)),
     filter((active) => active.length > 0),
     distinctUntilChanged((a, b) => a.length === b.length),
-    take(10),
+    take(10)
   )
   .subscribe((activeTodos) => renderList(activeTodos));
 ```
@@ -366,14 +364,14 @@ npm install @polystate/core @polystate/react
 
 All hooks use `useSyncExternalStore` (React 18+) — safe for concurrent rendering and hydration.
 
-| Hook | Purpose |
-|---|---|
-| `useStore(store)` | Subscribe to full state |
-| `useSelector(store, sel)` | Subscribe to a slice; skip re-renders when unchanged |
-| `useDispatch(store)` | Returns stable `{ dispatch }` memoized with `useCallback` |
-| `useSetState(store)` | Returns `(patch: Partial<T>) => void` for direct partial updates |
-| `createStoreHooks(store)` | Pre-binds all hooks to a specific store — preferred pattern |
-| `createStoreContext(store)` | Creates React Context `Provider` + `useContextStore()` |
+| Hook                        | Purpose                                                          |
+| --------------------------- | ---------------------------------------------------------------- |
+| `useStore(store)`           | Subscribe to full state                                          |
+| `useSelector(store, sel)`   | Subscribe to a slice; skip re-renders when unchanged             |
+| `useDispatch(store)`        | Returns stable `{ dispatch }` memoized with `useCallback`        |
+| `useSetState(store)`        | Returns `(patch: Partial<T>) => void` for direct partial updates |
+| `createStoreHooks(store)`   | Pre-binds all hooks to a specific store — preferred pattern      |
+| `createStoreContext(store)` | Creates React Context `Provider` + `useContextStore()`           |
 
 ### Option A — Global hooks
 
@@ -387,7 +385,9 @@ function TodoList() {
 
   return (
     <>
-      {todos.map((t) => <li key={t.id}>{t.text}</li>)}
+      {todos.map((t) => (
+        <li key={t.id}>{t.text}</li>
+      ))}
       <button onClick={() => dispatch('addTodo', 'New task')}>Add</button>
     </>
   );
@@ -401,7 +401,7 @@ import { createStoreHooks } from '@polystate/react';
 import { todoStore } from './store';
 
 export const {
-  useStore:    useTodoStore,
+  useStore: useTodoStore,
   useSelector: useTodoSelector,
   useDispatch: useTodoDispatch,
 } = createStoreHooks(todoStore);
@@ -465,10 +465,16 @@ interface TodoState {
 const initialState: TodoState = { todos: [], filter: 'all' };
 
 const actions = {
-  addTodo:    (s: TodoState, title: string) => ({ ...s, todos: [...s.todos, { id: Date.now(), title, done: false }] }),
-  toggleTodo: (s: TodoState, id: number)    => ({ ...s, todos: s.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) }),
-  removeTodo: (s: TodoState, id: number)    => ({ ...s, todos: s.todos.filter((t) => t.id !== id) }),
-  setFilter:  (s: TodoState, filter: TodoState['filter']) => ({ ...s, filter }),
+  addTodo: (s: TodoState, title: string) => ({
+    ...s,
+    todos: [...s.todos, { id: Date.now(), title, done: false }],
+  }),
+  toggleTodo: (s: TodoState, id: number) => ({
+    ...s,
+    todos: s.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
+  }),
+  removeTodo: (s: TodoState, id: number) => ({ ...s, todos: s.todos.filter((t) => t.id !== id) }),
+  setFilter: (s: TodoState, filter: TodoState['filter']) => ({ ...s, filter }),
 };
 
 @Injectable({ providedIn: 'root' })
@@ -509,7 +515,7 @@ All `select$` subscriptions use `takeUntil(this.destroy$)` and are automatically
       <button (click)="service.dispatch('toggleTodo', todo.id)">Toggle</button>
       <button (click)="service.dispatch('removeTodo', todo.id)">Remove</button>
     </div>
-    <input #input (keyup.enter)="service.dispatch('addTodo', input.value); input.value = ''">
+    <input #input (keyup.enter)="service.dispatch('addTodo', input.value); input.value = ''" />
   `,
   standalone: true,
   imports: [AsyncPipe, NgFor, NgClass],
@@ -536,10 +542,7 @@ const store = createStore(initialState, actions);
 connectDevTools(store, { name: 'My App' });
 
 // Or chain:
-const store = connectDevTools(
-  createStore(initialState, actions),
-  { name: 'My App' }
-);
+const store = connectDevTools(createStore(initialState, actions), { name: 'My App' });
 ```
 
 ### Features
@@ -571,11 +574,11 @@ Used for code generation. A `StoreDefinition` is a plain, serializable descripti
 
 ```typescript
 interface StoreDefinition<TState = unknown> {
-  name: string;           // camelCase, used in class/variable names
-  initialState: TState;   // the initial state value
+  name: string; // camelCase, used in class/variable names
+  initialState: TState; // the initial state value
   actions: ActionMap<TState>; // map of pure action handlers
   asyncActions?: AsyncActionMap; // optional async thunks (for NgRx Effects)
-  description?: string;   // optional description for generated comments
+  description?: string; // optional description for generated comments
 }
 ```
 
@@ -750,9 +753,9 @@ export interface TodoState {
 ```typescript
 import { generateReduxStore, generateHooks, generateTypes } from '@polystate/generator-react';
 
-const storeCode  = generateReduxStore(storeDefinition);
-const hooksCode  = generateHooks(storeDefinition);
-const typesCode  = generateTypes(storeDefinition);
+const storeCode = generateReduxStore(storeDefinition);
+const hooksCode = generateHooks(storeDefinition);
+const typesCode = generateTypes(storeDefinition);
 ```
 
 ---
@@ -775,7 +778,10 @@ export interface TodoState {
 ```typescript
 export const addTodo = createAction('[Todo] addTodo', props<{ payload: string }>());
 export const toggleTodo = createAction('[Todo] toggleTodo', props<{ payload: number }>());
-export const setFilter = createAction('[Todo] setFilter', props<{ payload: 'all' | 'active' | 'completed' }>());
+export const setFilter = createAction(
+  '[Todo] setFilter',
+  props<{ payload: 'all' | 'active' | 'completed' }>()
+);
 ```
 
 **`reducer.ts`** — actual handler logic from the definition:
@@ -790,7 +796,7 @@ export const todoReducer = createReducer(
   on(TodoActions.toggleTodo, (state, { payload }) => {
     const id = payload;
     return { ...state, todos: state.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) };
-  }),
+  })
   // ...
 );
 ```
@@ -799,7 +805,7 @@ export const todoReducer = createReducer(
 
 ```typescript
 export const selectTodoState = createFeatureSelector<TodoState>('todo');
-export const selectTodos  = createSelector(selectTodoState, (state) => state.todos);
+export const selectTodos = createSelector(selectTodoState, (state) => state.todos);
 export const selectFilter = createSelector(selectTodoState, (state) => state.filter);
 ```
 
@@ -808,13 +814,17 @@ export const selectFilter = createSelector(selectTodoState, (state) => state.fil
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class TodoFacade {
-  todos$:  Observable<TodoState['todos']>  = this.store.pipe(select(selectTodos));
+  todos$: Observable<TodoState['todos']> = this.store.pipe(select(selectTodos));
   filter$: Observable<TodoState['filter']> = this.store.pipe(select(selectFilter));
 
   constructor(private store: Store<{ todo: TodoState }>) {}
 
-  addTodo(payload: string): void   { this.store.dispatch(TodoActions.addTodo({ payload })); }
-  toggleTodo(payload: number): void { this.store.dispatch(TodoActions.toggleTodo({ payload })); }
+  addTodo(payload: string): void {
+    this.store.dispatch(TodoActions.addTodo({ payload }));
+  }
+  toggleTodo(payload: number): void {
+    this.store.dispatch(TodoActions.toggleTodo({ payload }));
+  }
 }
 ```
 
@@ -857,8 +867,8 @@ interface AppState {
 const store = createStore<AppState>(
   { user: null, items: [], status: 'idle' },
   {
-    setUser:   (s, user: AppState['user'])     => ({ ...s, user }),
-    addItem:   (s, label: string)              => ({ ...s, items: [...s.items, { id: Date.now(), label }] }),
+    setUser: (s, user: AppState['user']) => ({ ...s, user }),
+    addItem: (s, label: string) => ({ ...s, items: [...s.items, { id: Date.now(), label }] }),
     setStatus: (s, status: AppState['status']) => ({ ...s, status }),
   }
 );
@@ -885,7 +895,12 @@ export default {
 ```typescript
 import { createStore } from '@polystate/core';
 
-const store = createStore({ count: 0, name: '' }, { /* actions */ });
+const store = createStore(
+  { count: 0, name: '' },
+  {
+    /* actions */
+  }
+);
 
 type AppState = ReturnType<typeof store.getState>;
 // → { count: number; name: string }
@@ -895,7 +910,7 @@ type AppState = ReturnType<typeof store.getState>;
 
 ```typescript
 const count = useSelector(store, (s) => s.count); // → number
-const name  = useSelector(store, (s) => s.name);  // → string
+const name = useSelector(store, (s) => s.name); // → string
 ```
 
 ### Type-safe `dispatch`
@@ -908,14 +923,14 @@ Action names are validated at the TypeScript level — dispatching a non-existen
 
 Benchmarked on Apple M-series (Node.js 20):
 
-| Operation | Throughput |
-|---|---|
-| `getState()` | ~23 M ops/sec |
-| `dispatch` no subscribers | ~3.2 M ops/sec |
-| `setState` no subscribers | ~6.2 M ops/sec |
-| `reset()` | ~6.7 M ops/sec |
-| `subscribe + unsubscribe` | ~5.4 M ops/sec |
-| `dispatch` with 100 global subscribers | ~225 K ops/sec |
+| Operation                                             | Throughput     |
+| ----------------------------------------------------- | -------------- |
+| `getState()`                                          | ~23 M ops/sec  |
+| `dispatch` no subscribers                             | ~3.2 M ops/sec |
+| `setState` no subscribers                             | ~6.2 M ops/sec |
+| `reset()`                                             | ~6.7 M ops/sec |
+| `subscribe + unsubscribe`                             | ~5.4 M ops/sec |
+| `dispatch` with 100 global subscribers                | ~225 K ops/sec |
 | `dispatch` with 100 selective subscribers (unchanged) | ~480 K ops/sec |
 
 ### Why Selective Subscriptions Are Faster at Scale
@@ -924,10 +939,10 @@ Global subscribers run on every dispatch. Selective subscribers compare `selecto
 
 ### Bundle Sizes (gzipped)
 
-| Package | Gzipped |
-|---|---|
-| `@polystate/core` | < 1.5 KB |
-| `@polystate/react` | < 0.5 KB |
+| Package              | Gzipped  |
+| -------------------- | -------- |
+| `@polystate/core`    | < 1.5 KB |
+| `@polystate/react`   | < 0.5 KB |
 | `@polystate/angular` | < 1.0 KB |
 
 ---

@@ -9,7 +9,7 @@
 export { Signal } from './signal';
 
 // Store and types
-export { Store, createStore } from './store';
+export { createStore, Store } from './store';
 export type {
   ActionHandler,
   ActionMap,
@@ -17,7 +17,7 @@ export type {
   StoreOptions,
   Subscriber,
   ThunkAction,
-  Unsubscriber,
+  Unsubscriber
 } from './store';
 
 // Slices
@@ -31,3 +31,4 @@ export type { Middleware, MiddlewareContext } from './middleware';
 // RxJS compatibility
 export { asObservable, distinctUntilChanged, filter, map, pipe, take } from './observable';
 export type { Observable, Observer, Subscription } from './observable';
+
