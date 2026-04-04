@@ -67,7 +67,9 @@ export function useSelector<T, S>(store: Store<T>, selector: Selector<T, S>): S 
  * }
  * ```
  */
-export function useDispatch<T>(store: Store<T>) {
+export function useDispatch<T>(store: Store<T>): {
+  dispatch: (action: string, payload?: unknown) => Promise<void>;
+} {
   const dispatch = useCallback(
     (action: string, payload?: unknown) => store.dispatch(action, payload),
     [store]
@@ -95,8 +97,15 @@ export function useDispatch<T>(store: Store<T>) {
  * }
  * ```
  */
-export function useSetState<T>(store: Store<T>) {
+export function useSetState<T>(store: Store<T>): (patch: Partial<T>) => void {
   return useCallback((patch: Partial<T>) => store.setState(patch), [store]);
+}
+
+export interface StoreHooks<T> {
+  useStore: () => T;
+  useSelector: <S>(selector: Selector<T, S>) => S;
+  useDispatch: () => { dispatch: (action: string, payload?: unknown) => Promise<void> };
+  useSetState: () => (patch: Partial<T>) => void;
 }
 
 /**
@@ -123,7 +132,7 @@ export function useSetState<T>(store: Store<T>) {
  * }
  * ```
  */
-export function createStoreHooks<T>(store: Store<T>) {
+export function createStoreHooks<T>(store: Store<T>): StoreHooks<T> {
   return {
     useStore: () => useStore(store),
     useSelector: <S>(selector: Selector<T, S>) => useSelector(store, selector),

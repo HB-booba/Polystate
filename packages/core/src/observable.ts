@@ -5,7 +5,7 @@ import type { Selector, Store } from './store';
  */
 export interface Observer<T> {
   next?(value: T): void;
-  error?(err: any): void;
+  error?(err: unknown): void;
   complete?(): void;
 }
 
@@ -16,7 +16,7 @@ export interface Observable<T> {
   subscribe(observer: Observer<T>): Subscription;
   subscribe(
     next: ((value: T) => void) | null,
-    error?: (err: any) => void,
+    error?: (err: unknown) => void,
     complete?: () => void
   ): Subscription;
   pipe(): Observable<T>;
@@ -36,6 +36,7 @@ export interface Observable<T> {
     op3: (obs: Observable<B>) => Observable<C>,
     op4: (obs: Observable<C>) => Observable<D>
   ): Observable<D>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): Observable<any>;
 }
 
@@ -80,7 +81,11 @@ export function asObservable<T, S>(store: Store<T>, selector?: Selector<T, S>): 
   // overloaded interface signatures, so we use `as unknown as` here while
   // keeping full type safety for callers.
   const obs = {
-    subscribe(observerOrNext: any, error?: any, complete?: any): Subscription {
+    subscribe(
+      observerOrNext: Observer<T | S> | ((value: T | S) => void) | null,
+      error?: (err: unknown) => void,
+      complete?: () => void
+    ): Subscription {
       // Handle both callback and observer patterns
       let observer: Observer<T | S>;
 
@@ -123,7 +128,9 @@ export function asObservable<T, S>(store: Store<T>, selector?: Selector<T, S>): 
 
       return subscription;
     },
-    pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): any {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): Observable<any> {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
     },
   };
@@ -154,8 +161,10 @@ export function asObservable<T, S>(store: Store<T>, selector?: Selector<T, S>): 
  */
 export function pipe<T, R>(
   observable: Observable<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...operators: Array<(obs: Observable<any>) => Observable<any>>
 ): Observable<R> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let result: Observable<any> = observable;
   for (const operator of operators) {
     result = operator(result);
@@ -175,24 +184,26 @@ export function pipe<T, R>(
 export function map<T, R>(mapFn: (value: T) => R) {
   return (source: Observable<T>): Observable<R> => {
     const obs: Observable<R> = {
-      subscribe(observerOrNext: any) {
-        const nextFn =
+      subscribe(observerOrNext: Observer<R> | ((value: R) => void) | null): Subscription {
+        const nextFn: (value: R) => void =
           typeof observerOrNext === 'function'
             ? observerOrNext
-            : (v: any) => (observerOrNext as Observer<any>).next?.(v);
+            : (v: R) => {
+                observerOrNext?.next?.(v);
+              };
         const errorFn =
-          typeof observerOrNext === 'object'
+          typeof observerOrNext !== 'function'
             ? observerOrNext?.error?.bind(observerOrNext)
             : undefined;
         const completeFn =
-          typeof observerOrNext === 'object'
+          typeof observerOrNext !== 'function'
             ? observerOrNext?.complete?.bind(observerOrNext)
             : undefined;
         return source.subscribe({
           next(value: T) {
             nextFn(mapFn(value));
           },
-          error(err: any) {
+          error(err: unknown) {
             errorFn?.(err);
           },
           complete() {
@@ -200,7 +211,9 @@ export function map<T, R>(mapFn: (value: T) => R) {
           },
         });
       },
-      pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): any {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): Observable<any> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
       },
     };
@@ -219,17 +232,19 @@ export function map<T, R>(mapFn: (value: T) => R) {
 export function filter<T>(predicate: (value: T) => boolean) {
   return (source: Observable<T>): Observable<T> => {
     const obs: Observable<T> = {
-      subscribe(observerOrNext: any) {
-        const nextFn =
+      subscribe(observerOrNext: Observer<T> | ((value: T) => void) | null): Subscription {
+        const nextFn: (value: T) => void =
           typeof observerOrNext === 'function'
             ? observerOrNext
-            : (v: any) => (observerOrNext as Observer<any>).next?.(v);
+            : (v: T) => {
+                observerOrNext?.next?.(v);
+              };
         const errorFn =
-          typeof observerOrNext === 'object'
+          typeof observerOrNext !== 'function'
             ? observerOrNext?.error?.bind(observerOrNext)
             : undefined;
         const completeFn =
-          typeof observerOrNext === 'object'
+          typeof observerOrNext !== 'function'
             ? observerOrNext?.complete?.bind(observerOrNext)
             : undefined;
         return source.subscribe({
@@ -238,7 +253,7 @@ export function filter<T>(predicate: (value: T) => boolean) {
               nextFn(value);
             }
           },
-          error(err: any) {
+          error(err: unknown) {
             errorFn?.(err);
           },
           complete() {
@@ -246,7 +261,9 @@ export function filter<T>(predicate: (value: T) => boolean) {
           },
         });
       },
-      pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): any {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): Observable<any> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
       },
     };
@@ -266,17 +283,19 @@ export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolea
   return (source: Observable<T>): Observable<T> => {
     const compare = compareFn ?? ((a: T, b: T) => a === b);
     const obs: Observable<T> = {
-      subscribe(observerOrNext: any) {
-        const nextFn =
+      subscribe(observerOrNext: Observer<T> | ((value: T) => void) | null): Subscription {
+        const nextFn: (value: T) => void =
           typeof observerOrNext === 'function'
             ? observerOrNext
-            : (v: any) => (observerOrNext as Observer<any>).next?.(v);
+            : (v: T) => {
+                observerOrNext?.next?.(v);
+              };
         const errorFn =
-          typeof observerOrNext === 'object'
+          typeof observerOrNext !== 'function'
             ? observerOrNext?.error?.bind(observerOrNext)
             : undefined;
         const completeFn =
-          typeof observerOrNext === 'object'
+          typeof observerOrNext !== 'function'
             ? observerOrNext?.complete?.bind(observerOrNext)
             : undefined;
         let prev: T;
@@ -300,7 +319,7 @@ export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolea
               nextFn(value);
             }
           },
-          error(err: any) {
+          error(err: unknown) {
             errorFn?.(err);
           },
           complete() {
@@ -308,7 +327,9 @@ export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolea
           },
         });
       },
-      pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): any {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): Observable<any> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
       },
     };
@@ -327,17 +348,19 @@ export function distinctUntilChanged<T>(compareFn?: (prev: T, curr: T) => boolea
 export function take<T>(count: number) {
   return (source: Observable<T>): Observable<T> => {
     const obs: Observable<T> = {
-      subscribe(observerOrNext: any) {
-        const nextFn =
+      subscribe(observerOrNext: Observer<T> | ((value: T) => void) | null): Subscription {
+        const nextFn: (value: T) => void =
           typeof observerOrNext === 'function'
             ? observerOrNext
-            : (v: any) => (observerOrNext as Observer<any>).next?.(v);
+            : (v: T) => {
+                observerOrNext?.next?.(v);
+              };
         const errorFn =
-          typeof observerOrNext === 'object'
+          typeof observerOrNext !== 'function'
             ? observerOrNext?.error?.bind(observerOrNext)
             : undefined;
         const completeFn =
-          typeof observerOrNext === 'object'
+          typeof observerOrNext !== 'function'
             ? observerOrNext?.complete?.bind(observerOrNext)
             : undefined;
         let emitted = 0;
@@ -352,7 +375,7 @@ export function take<T>(count: number) {
               }
             }
           },
-          error(err: any) {
+          error(err: unknown) {
             errorFn?.(err);
           },
           complete() {
@@ -361,7 +384,9 @@ export function take<T>(count: number) {
         });
         return subscription;
       },
-      pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): any {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pipe(...operators: Array<(obs: Observable<any>) => Observable<any>>): Observable<any> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return operators.reduce((acc, op) => op(acc), obs as Observable<any>);
       },
     };

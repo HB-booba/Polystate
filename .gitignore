@@ -49,3 +49,9 @@ polystate.zip
 
 # nx
 .nx/
+
+#docs
+docs
+docs/*
+docs/*/assets
+docs/*/slides

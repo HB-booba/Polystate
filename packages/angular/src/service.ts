@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import type { Selector, Store } from '@polystate/core';
 import { asObservable, createStore } from '@polystate/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 /**
@@ -89,7 +89,7 @@ export abstract class PolystateService<T> implements OnDestroy {
    * </div>
    * ```
    */
-  select$<S>(selector: Selector<T, S>) {
+  select$<S>(selector: Selector<T, S>): Observable<S> {
     const observable = asObservable(this.store, selector);
     const subject = new BehaviorSubject(this.store.getState(selector));
 

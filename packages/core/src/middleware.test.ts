@@ -150,8 +150,10 @@ describe('Middleware', () => {
         send: vi.fn(),
       };
 
-      const original = (window as any).__REDUX_DEVTOOLS_EXTENSION__;
-      (window as any).__REDUX_DEVTOOLS_EXTENSION__ = () => devtoolsMock;
+      type WinWithDevTools = typeof window & { __REDUX_DEVTOOLS_EXTENSION__?: unknown };
+      const win = window as WinWithDevTools;
+      const original = win.__REDUX_DEVTOOLS_EXTENSION__;
+      win.__REDUX_DEVTOOLS_EXTENSION__ = () => devtoolsMock;
 
       const store = createStore<TestState>(
         { count: 0 },
@@ -169,12 +171,14 @@ describe('Middleware', () => {
         { count: 1 }
       );
 
-      (window as any).__REDUX_DEVTOOLS_EXTENSION__ = original;
+      (window as WinWithDevTools).__REDUX_DEVTOOLS_EXTENSION__ = original;
     });
 
     it('should handle missing devtools gracefully', async () => {
-      const original = (window as any).__REDUX_DEVTOOLS_EXTENSION__;
-      delete (window as any).__REDUX_DEVTOOLS_EXTENSION__;
+      type WinWithDevTools2 = typeof window & { __REDUX_DEVTOOLS_EXTENSION__?: unknown };
+      const win2 = window as WinWithDevTools2;
+      const original2 = win2.__REDUX_DEVTOOLS_EXTENSION__;
+      delete win2.__REDUX_DEVTOOLS_EXTENSION__;
 
       const store = createStore<TestState>(
         { count: 0 },
@@ -188,7 +192,7 @@ describe('Middleware', () => {
 
       // Should not throw
       await store.dispatch('increment');
-      (window as any).__REDUX_DEVTOOLS_EXTENSION__ = original;
+      win2.__REDUX_DEVTOOLS_EXTENSION__ = original2;
     });
   });
 });

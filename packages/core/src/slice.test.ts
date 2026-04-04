@@ -145,7 +145,7 @@ describe('Slices', () => {
     // unrelated key must be untouched
     expect(store.getState().other).toBe('unchanged');
     // no spurious top-level 'count' key
-    expect((store.getState() as any).count).toBeUndefined();
+    expect((store.getState() as Record<string, unknown>).count).toBeUndefined();
 
     await store.dispatch('counter/add', 10);
     expect(store.getState().counter.count).toBe(11);

@@ -36,7 +36,7 @@ export type Unsubscriber = () => void;
  * Store options for configuration.
  * @template T - The store state type
  */
-export interface StoreOptions<T = any> {
+export interface StoreOptions<T = unknown> {
   /** Array of middleware functions */
   middleware?: Middleware<T>[];
   /** Enable logging for debugging */
@@ -47,7 +47,7 @@ export interface StoreOptions<T = any> {
  * Thunk action - async function with dispatch and getState access.
  * @template T - The store state type
  */
-export type ThunkAction<T = any> = (
+export type ThunkAction<T = unknown> = (
   dispatch: (action: string | ThunkAction<T>, payload?: unknown) => Promise<void>,
   getState: () => T
 ) => void | Promise<void>;
@@ -76,7 +76,7 @@ export class Store<T> {
   private actions: ActionMap<T>;
   private middleware: Middleware<T>[];
   private globalSubscribers: Set<Subscriber<T>> = new Set();
-  private selectiveSubscribers: Map<Selector<T, any>, Set<Subscriber<any>>> = new Map();
+  private selectiveSubscribers: Map<Selector<T, unknown>, Set<Subscriber<unknown>>> = new Map();
   private readonly initialState: T;
   private _destroyed = false;
 

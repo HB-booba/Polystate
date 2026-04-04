@@ -1,13 +1,27 @@
 import type { Middleware, MiddlewareContext, Store } from '@polystate/core';
 
 /**
+ * Structured message received from the Redux DevTools Extension.
+ */
+interface DevToolsMessage {
+  type: string;
+  payload?: { type: string; actionId?: number };
+  state?: string;
+}
+
+/**
  * Redux DevTools Extension interface.
  */
 interface DevToolsExtension {
-  send(action: any, state: any): void;
-  init(state: any): void;
-  subscribe(callback: (message: any) => void): (() => void) | undefined;
+  send(action: { type: string; payload?: unknown; timestamp: number }, state: unknown): void;
+  init(state: unknown): void;
+  subscribe(callback: (message: DevToolsMessage) => void): (() => void) | undefined;
 }
+
+/** Typed accessor for the Redux DevTools browser extension. */
+type WindowWithDevTools = typeof window & {
+  __REDUX_DEVTOOLS_EXTENSION__?: (config: { name: string; maxAge: number }) => DevToolsExtension;
+};
 
 /**
  * Configuration for the DevTools middleware.
@@ -77,7 +91,7 @@ export function createDevToolsMiddleware<T>(
 
   // Initialize DevTools connection
   if (typeof window !== 'undefined') {
-    const ext = (window as any).__REDUX_DEVTOOLS_EXTENSION__;
+    const ext = (window as WindowWithDevTools).__REDUX_DEVTOOLS_EXTENSION__;
     if (ext) {
       const dt: DevToolsExtension = ext({ name, maxAge });
       devtools = dt;
@@ -89,7 +103,7 @@ export function createDevToolsMiddleware<T>(
       // Doing this inside the returned middleware fn (per-action) was wrong:
       // it would silently re-register on every dispatch.
       if (timeTravel) {
-        dt.subscribe?.((message: any) => {
+        dt.subscribe?.((message: DevToolsMessage) => {
           if (message.type !== 'DISPATCH') return;
 
           const payloadType: string = message.payload?.type;
@@ -109,9 +123,7 @@ export function createDevToolsMiddleware<T>(
             if (targetState !== undefined) {
               store.setState(targetState);
             } else {
-              console.warn(
-                `[Polystate DevTools] No state snapshot for actionId ${targetId}`,
-              );
+              console.warn(`[Polystate DevTools] No state snapshot for actionId ${targetId}`);
             }
           }
         });
@@ -136,7 +148,7 @@ export function createDevToolsMiddleware<T>(
     // Send action + resulting state to DevTools
     devtools.send(
       { type: context.action, payload: context.payload, timestamp: Date.now() },
-      context.nextState,
+      context.nextState
     );
   };
 }
@@ -156,7 +168,7 @@ export function createDevToolsMiddleware<T>(
  * });
  * ```
  */
-export function connectDevTools(store: any, _config: DevToolsConfig = {}): any {
+export function connectDevTools<T>(store: Store<T>, _config: DevToolsConfig = {}): Store<T> {
   // This is a helper for connecting DevTools after store creation
   // Useful for stores created without middleware options
   return store;
@@ -183,7 +195,7 @@ export interface DevToolsAction {
  * console.log(JSON.stringify(history, null, 2));
  * ```
  */
-export function exportStateHistory(_store: any): Array<{ action: string; state: any }> {
+export function exportStateHistory<T>(_store: Store<T>): Array<{ action: string; state: T }> {
   // This would be implemented to export the internal history
   return [];
 }
@@ -200,9 +212,9 @@ export function exportStateHistory(_store: any): Array<{ action: string; state: 
  * importStateHistory(store, savedHistory);
  * ```
  */
-export function importStateHistory(
-  _store: any,
-  _history: Array<{ action: string; state: any }>
+export function importStateHistory<T>(
+  _store: Store<T>,
+  _history: Array<{ action: string; state: T }>
 ): void {
   // This would be implemented to import the history
 }

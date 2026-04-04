@@ -24,7 +24,7 @@ export interface MiddlewareContext<T> {
  * Middleware function signature.
  * @template T - The store state type
  */
-export type Middleware<T = any> = (context: MiddlewareContext<T>) => void | Promise<void>;
+export type Middleware<T = unknown> = (context: MiddlewareContext<T>) => void | Promise<void>;
 
 /**
  * Logger middleware - logs all actions and state changes.
@@ -39,7 +39,7 @@ export type Middleware<T = any> = (context: MiddlewareContext<T>) => void | Prom
  * });
  * ```
  */
-export function loggerMiddleware<T = any>(): Middleware<T> {
+export function loggerMiddleware<T = unknown>(): Middleware<T> {
   return (context: MiddlewareContext<T>) => {
     console.group(`[${context.action}]`);
     console.log('Payload:', context.payload);
@@ -66,7 +66,7 @@ export function loggerMiddleware<T = any>(): Middleware<T> {
  * store.dispatch(thunkAction);
  * ```
  */
-export function thunkMiddleware<T = any>(): Middleware<T> {
+export function thunkMiddleware<T = unknown>(): Middleware<T> {
   return async (_context: MiddlewareContext<T>) => {
     // Thunk middleware doesn't need to do anything on success
     // The actual thunk execution is handled by the store
@@ -90,9 +90,11 @@ export function thunkMiddleware<T = any>(): Middleware<T> {
  * // State is automatically saved to localStorage after each action
  * ```
  */
-export function persistMiddleware<T = any>(
+export function persistMiddleware<T = unknown>(
   key: string,
-  storage: Storage = typeof window !== 'undefined' ? window.localStorage : (null as any)
+  storage: Storage = typeof window !== 'undefined'
+    ? window.localStorage
+    : (null as unknown as Storage)
 ): Middleware<T> {
   return (context: MiddlewareContext<T>) => {
     try {
@@ -123,7 +125,9 @@ export function persistMiddleware<T = any>(
  */
 export function loadPersistedState<T>(
   key: string,
-  storage: Storage = typeof window !== 'undefined' ? window.localStorage : (null as any)
+  storage: Storage = typeof window !== 'undefined'
+    ? window.localStorage
+    : (null as unknown as Storage)
 ): T | null {
   try {
     if (!storage) return null;
@@ -155,9 +159,16 @@ export function loadPersistedState<T>(
  * });
  * ```
  */
-export function devToolsMiddleware<T = any>(name: string = 'Store'): Middleware<T> {
+export function devToolsMiddleware<T = unknown>(name: string = 'Store'): Middleware<T> {
+  type WindowWithDevTools = typeof window & {
+    __REDUX_DEVTOOLS_EXTENSION__?: (config: { name: string }) => {
+      send(action: unknown, state: unknown): void;
+    };
+  };
   const devtools =
-    typeof window !== 'undefined' ? (window as any).__REDUX_DEVTOOLS_EXTENSION__?.({ name }) : null;
+    typeof window !== 'undefined'
+      ? (window as WindowWithDevTools).__REDUX_DEVTOOLS_EXTENSION__?.({ name })
+      : null;
 
   return (context: MiddlewareContext<T>) => {
     if (devtools) {

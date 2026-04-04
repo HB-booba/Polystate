@@ -1,5 +1,5 @@
 import type { Store } from '@polystate/core';
-import { createContext, createElement, ReactNode, useContext } from 'react';
+import { Context, createContext, createElement, ReactElement, ReactNode, useContext } from 'react';
 
 /**
  * Creates a React Context for a Polystate store.
@@ -26,7 +26,11 @@ import { createContext, createElement, ReactNode, useContext } from 'react';
  * }
  * ```
  */
-export function createStoreContext<T>(store: Store<T>) {
+export function createStoreContext<T>(store: Store<T>): {
+  Provider: ({ children }: { children: ReactNode }) => ReactElement;
+  StoreContext: Context<Store<T> | null>;
+  useContextStore: () => Store<T>;
+} {
   const StoreContext = createContext<Store<T> | null>(null);
 
   /**
