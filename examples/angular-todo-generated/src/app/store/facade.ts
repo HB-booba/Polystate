@@ -1,6 +1,5 @@
 /**
  * Generated Angular Facade Service for todo store
- * Simplifies component interaction with NgRx store
  * Do not edit manually - regenerate with: polystate generate
  */
 
@@ -13,49 +12,41 @@ import { TodoState } from './state';
 
 @Injectable({ providedIn: 'root' })
 export class TodoFacade {
-    // ========================================================================
-    // Selectors (as Observables)
-    // ========================================================================
+  // ========================================================================
+  // Selectors (as Observables)
+  // ========================================================================
 
-    todos$: Observable<any> = this.store.pipe(
-        select(fromTodoSelectors.selectTodos)
-    );
+  todos$: Observable<Array<{
+            id: number;
+            title: string;
+            done: boolean;
+        }>> = this.store.pipe(
+    select(fromTodoSelectors.selectTodos)
+  );
 
-    filter$: Observable<any> = this.store.pipe(
-        select(fromTodoSelectors.selectFilter)
-    );
+  filter$: Observable<'all' | 'active' | 'completed'> = this.store.pipe(
+    select(fromTodoSelectors.selectFilter)
+  );
 
-    filteredTodos$: Observable<any> = this.store.pipe(
-        select(fromTodoSelectors.selectFilteredTodos)
-    );
+  constructor(private store: Store<{ todo: TodoState }>) {}
 
-    activeTodoCount$: Observable<any> = this.store.pipe(
-        select(fromTodoSelectors.selectActiveTodoCount)
-    );
+  // ========================================================================
+  // Actions (as methods)
+  // ========================================================================
 
-    completedTodoCount$: Observable<any> = this.store.pipe(
-        select(fromTodoSelectors.selectCompletedTodoCount)
-    );
+  addTodo(payload: string): void {
+    this.store.dispatch(TodoActions.addTodo({ payload }));
+  }
 
-    constructor(private store: Store<{ todo: TodoState }>) { }
+  toggleTodo(payload: number): void {
+    this.store.dispatch(TodoActions.toggleTodo({ payload }));
+  }
 
-    // ========================================================================
-    // Actions (as methods)
-    // ========================================================================
+  removeTodo(payload: number): void {
+    this.store.dispatch(TodoActions.removeTodo({ payload }));
+  }
 
-    addTodo(payload: string): void {
-        this.store.dispatch(TodoActions.addTodo({ payload }));
-    }
-
-    toggleTodo(payload: number): void {
-        this.store.dispatch(TodoActions.toggleTodo({ payload }));
-    }
-
-    removeTodo(payload: number): void {
-        this.store.dispatch(TodoActions.removeTodo({ payload }));
-    }
-
-    setFilter(payload: string): void {
-        this.store.dispatch(TodoActions.setFilter({ payload }));
-    }
+  setFilter(payload: 'all' | 'active' | 'completed'): void {
+    this.store.dispatch(TodoActions.setFilter({ payload }));
+  }
 }
