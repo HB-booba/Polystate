@@ -27,6 +27,10 @@ export type { Slice, SliceOptions } from './slice';
 // Selectors
 export { createSelector } from './selector';
 
+// History (undo/redo)
+export { withHistory } from './history';
+export type { HistoryController, HistoryOptions } from './history';
+
 // Middleware
 export { loadPersistedState, loggerMiddleware, persistMiddleware } from './middleware';
 export type { Middleware, MiddlewareContext } from './middleware';

@@ -12,6 +12,7 @@ Framework-agnostic state management core with **zero dependencies**.
 - **RxJS Compatible**: `asObservable()` bridge for seamless RxJS integration
 - **Selective Subscriptions**: Only re-render what changed
 - **Memoized Selectors**: `createSelector()` for cheap derived state, no extra dependency
+- **Undo/Redo**: `withHistory()` for bounded in-app undo/redo history
 
 ## Installation
 
@@ -149,6 +150,36 @@ const filtered = selectFilteredProducts(store.getState());
 // Combining is skipped on any state change that doesn't touch `products`
 // or `selectedCategory` — cheap even for a large `products` array.
 ```
+
+### History (Undo/Redo)
+
+Opt a store into a bounded undo/redo stack — for in-app UX (e.g. an
+editor's Ctrl+Z), independent of DevTools time-travel.
+
+```typescript
+import { createStore, withHistory } from '@polystate/core';
+
+const store = withHistory(
+  createStore({ text: '' }, {
+    setText: (state, text: string) => ({ ...state, text }),
+  }),
+  { limit: 50 } // optional; defaults to 100
+);
+
+await store.dispatch('setText', 'a');
+await store.dispatch('setText', 'ab');
+
+store.undo(); // { text: 'a' }
+store.undo(); // { text: '' }
+store.redo(); // { text: 'a' }
+
+store.canUndo(); // true
+store.canRedo(); // true
+store.clearHistory(); // discard past/future without changing state
+```
+
+Dispatching a new action after `undo()` clears the redo stack, matching
+standard editor semantics.
 
 ### Slices
 
@@ -449,6 +480,17 @@ Creates a memoized selector from one or more input selectors and a combiner.
 function createSelector<T, Args extends readonly unknown[], R>(
   ...args: [...{ [K in keyof Args]: Selector<T, Args[K]> }, (...args: Args) => R]
 ): Selector<T, R>;
+```
+
+### withHistory<T>
+
+Adds undo/redo to a store.
+
+```typescript
+function withHistory<T, A extends ActionMap<T>>(
+  store: Store<T, A>,
+  options?: HistoryOptions
+): Store<T, A> & HistoryController;
 ```
 
 ## Type Safety
