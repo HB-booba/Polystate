@@ -17,7 +17,9 @@ export interface MiddlewareContext<T> {
   payload: unknown;
   prevState: T;
   nextState: T;
-  dispatch: (action: string, payload?: unknown) => void;
+  dispatch: (action: string, payload?: unknown) => Promise<void>;
+  /** Reads the store's current state at call time — not a snapshot from dispatch. */
+  getState: () => T;
 }
 
 /**

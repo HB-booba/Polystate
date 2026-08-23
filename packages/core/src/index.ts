@@ -28,6 +28,10 @@ export type { Slice, SliceOptions } from './slice';
 export { loadPersistedState, loggerMiddleware, persistMiddleware } from './middleware';
 export type { Middleware, MiddlewareContext } from './middleware';
 
+// Effects
+export { effects } from './effects';
+export type { EffectHandler, EffectMap, EffectOptions } from './effects';
+
 // RxJS compatibility
 export { asObservable, distinctUntilChanged, filter, map, pipe, take } from './observable';
 export type { Observable, Observer, Subscription } from './observable';

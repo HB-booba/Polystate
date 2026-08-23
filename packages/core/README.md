@@ -8,7 +8,7 @@ Framework-agnostic state management core with **zero dependencies**.
 - **Framework Agnostic**: Works with React, Angular, Vue, or vanilla JS
 - **Full TypeScript Support**: Strict mode, complete type safety
 - **Reactive Primitives**: Signal-based reactivity system
-- **Middleware System**: Logger, thunk, persist, devtools, and custom middleware
+- **Middleware System**: Logger, thunk, persist, devtools, effects, and custom middleware
 - **RxJS Compatible**: `asObservable()` bridge for seamless RxJS integration
 - **Selective Subscriptions**: Only re-render what changed
 
@@ -241,6 +241,52 @@ const store = createStore(state, actions, {
 });
 
 // Open Redux DevTools to inspect actions and time-travel
+```
+
+**Effects**
+
+Run async side effects in response to dispatched actions, with automatic
+success/failure dispatch and race-proof deduplication — the same guarantees
+the NgRx code generator gives generated Angular effects, now available for
+`createStore` directly.
+
+```typescript
+import { effects, createStore } from '@polystate/core';
+
+const store = createStore(
+  { products: [] as Product[], loading: false, error: null as string | null },
+  {
+    loadProducts: (state) => ({ ...state, loading: true, error: null }),
+    loadProductsSuccess: (state, products: Product[]) => ({ ...state, products, loading: false }),
+    loadProductsFailure: (state, error: unknown) => ({ ...state, loading: false, error: String(error) }),
+  },
+  {
+    middleware: [
+      effects({
+        loadProducts: () => api.getProducts(),
+      }),
+    ],
+  }
+);
+
+store.dispatch('loadProducts');
+// ✓ loading set synchronously by the loadProducts handler
+// ✓ loadProductsSuccess/Failure dispatched automatically when the effect settles
+// ✓ a second dispatch('loadProducts') before the first resolves discards the first's result (dedup)
+```
+
+Give an effect explicit options for custom lifecycle action names or to opt
+out of deduplication:
+
+```typescript
+effects({
+  search: {
+    handler: (query: string, { getState }) => api.search(query),
+    successAction: 'searchResults',
+    failureAction: 'searchFailed',
+    cancelPrevious: false, // let every run report back, not just the latest
+  },
+});
 ```
 
 #### Custom Middleware

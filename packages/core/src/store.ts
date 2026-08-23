@@ -162,6 +162,7 @@ export class Store<T, A extends ActionMap<T> = ActionMap<T>> {
       prevState,
       nextState,
       dispatch: (name: string, data?: unknown) => this._dispatch(name, data),
+      getState: () => this.getState(),
     };
 
     for (const mw of this.middleware) {
