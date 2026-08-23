@@ -11,6 +11,7 @@ Framework-agnostic state management core with **zero dependencies**.
 - **Middleware System**: Logger, thunk, persist, devtools, effects, and custom middleware
 - **RxJS Compatible**: `asObservable()` bridge for seamless RxJS integration
 - **Selective Subscriptions**: Only re-render what changed
+- **Memoized Selectors**: `createSelector()` for cheap derived state, no extra dependency
 
 ## Installation
 
@@ -124,6 +125,29 @@ const actions = {
     user,
   }),
 };
+```
+
+### Selectors
+
+Memoized derived values — the combiner only re-runs when an input
+selector's result actually changes, so unrelated state changes (e.g. a
+`loading` flag) reuse the cached result instead of recomputing.
+
+```typescript
+import { createSelector } from '@polystate/core';
+
+const selectProducts = (state: ProductsState) => state.products;
+const selectCategory = (state: ProductsState) => state.selectedCategory;
+
+const selectFilteredProducts = createSelector(
+  selectProducts,
+  selectCategory,
+  (products, category) => products.filter((p) => p.category === category)
+);
+
+const filtered = selectFilteredProducts(store.getState());
+// Combining is skipped on any state change that doesn't touch `products`
+// or `selectedCategory` — cheap even for a large `products` array.
 ```
 
 ### Slices
@@ -415,6 +439,16 @@ Convert store to RxJS-compatible observable.
 ```typescript
 function asObservable<T>(store: Store<T>): Observable<T>;
 function asObservable<T, S>(store: Store<T>, selector: Selector<T, S>): Observable<S>;
+```
+
+### createSelector<T>
+
+Creates a memoized selector from one or more input selectors and a combiner.
+
+```typescript
+function createSelector<T, Args extends readonly unknown[], R>(
+  ...args: [...{ [K in keyof Args]: Selector<T, Args[K]> }, (...args: Args) => R]
+): Selector<T, R>;
 ```
 
 ## Type Safety

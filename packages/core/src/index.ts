@@ -24,6 +24,9 @@ export type {
 export { composeSlices, createSlice, prefixActions } from './slice';
 export type { Slice, SliceOptions } from './slice';
 
+// Selectors
+export { createSelector } from './selector';
+
 // Middleware
 export { loadPersistedState, loggerMiddleware, persistMiddleware } from './middleware';
 export type { Middleware, MiddlewareContext } from './middleware';
