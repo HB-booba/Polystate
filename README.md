@@ -6,7 +6,7 @@ Write your store definition once → generate native Redux + hooks **or** NgRx +
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-187%20passing-brightgreen.svg)](./vitest.config.ts)
+[![Tests](https://img.shields.io/badge/tests-236%20passing-brightgreen.svg)](./vitest.config.ts)
 
 ---
 
@@ -262,7 +262,8 @@ cd polystate
 npm install
 
 npm run build   # build all packages (tsup via Nx)
-npm run test    # vitest — 187 tests
+npm run test    # vitest — 185 unit tests
+npx vitest run --config vitest.integration.config.ts   # 51 integration tests (requires npm run build first)
 npm run lint    # eslint across all packages
 npm run format  # prettier
 ```
