@@ -1,5 +1,16 @@
 # @polystate/generator-react
 
+## 1.0.0
+
+### Major Changes
+
+- `generateFromAST` now drives reducer generation from the parsed definition AST instead of a stub. Generated reducers use typed `PayloadAction<T>` with a `const` binding for the payload param — every action produces a correct RTK reducer (previously an action like `toggleTodo` with no payload fell back to an IIFE anti-pattern).
+
+### Patch Changes
+
+- Updated dependencies:
+  - @polystate/definition@1.0.0
+
 ## 0.2.0
 
 ### Minor Changes

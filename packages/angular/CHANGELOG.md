@@ -1,5 +1,17 @@
 # @polystate/angular
 
+## 1.0.0
+
+### Major Changes
+
+- `PolystateService<T, A>` dispatch is now typed to `keyof A & string`, and `createAngularService<T, A>` preserves the action map type through to `dispatch` — wrong action names/payloads are compile-time errors.
+
+### Patch Changes
+
+- Fixed a memory leak in `PolystateService`: `select()` and `select$()` subscriptions weren't tracked, so they leaked past `ngOnDestroy`. Both now register their teardown in a `_cleanups` array that's flushed on destroy.
+- Updated dependencies:
+  - @polystate/core@1.0.0
+
 ## 0.2.0
 
 ### Minor Changes

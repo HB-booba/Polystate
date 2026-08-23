@@ -1,5 +1,16 @@
 # @polystate/generator-angular
 
+## 1.0.0
+
+### Major Changes
+
+- `generateNgRxReducerFromAST` now drives `on()` handler generation from the parsed definition AST instead of a stub, using the same `const`-binding pattern as the React generator with proper payload types — no more `any` in `props<>()` definitions.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @polystate/definition@1.0.0
+
 ## 0.2.0
 
 ### Minor Changes

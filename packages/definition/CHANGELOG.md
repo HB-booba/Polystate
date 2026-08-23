@@ -1,5 +1,11 @@
 # @polystate/definition
 
+## 1.0.0
+
+### Patch Changes
+
+- Type and validator refinements (`types.ts`, `validator.ts`) supporting the new AST-based generator pipeline in `@polystate/cli`, `@polystate/generator-react`, and `@polystate/generator-angular`.
+
 ## 0.2.0
 
 ### Minor Changes

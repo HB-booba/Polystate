@@ -1,5 +1,18 @@
 # @polystate/cli
 
+## 1.0.0
+
+### Major Changes
+
+- Generators now read the store definition's real AST via `ts-morph` (`parseDefinitionFile` → `generateFromAST` / `generateNgRxReducerFromAST`) instead of emitting stub reducers (`(state) => state`). This was the headline v1.0 blocker — every `polystate generate` invocation now produces working, typed reducer logic instead of a placeholder that had to be hand-written afterward.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @polystate/definition@1.0.0
+  - @polystate/generator-react@1.0.0
+  - @polystate/generator-angular@1.0.0
+
 ## 0.2.0
 
 ### Minor Changes
