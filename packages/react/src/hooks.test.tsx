@@ -1,5 +1,5 @@
 import { createStore } from '@polystate/core';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createElement as h } from 'react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -39,7 +39,7 @@ describe('React Hooks', () => {
       render(h(TestComponent));
       expect(screen.getByText('Count: 0')).toBeInTheDocument();
 
-      await store.dispatch('increment');
+      await act(() => store.dispatch('increment'));
       await waitFor(() => {
         expect(screen.getByText('Count: 1')).toBeInTheDocument();
       });
@@ -57,7 +57,7 @@ describe('React Hooks', () => {
       render(h(TestComponent));
       const initialRenderCount = renderCount;
 
-      await store.dispatch('increment');
+      await act(() => store.dispatch('increment'));
       await waitFor(() => {
         expect(renderCount).toBeGreaterThan(initialRenderCount);
       });
@@ -74,7 +74,7 @@ describe('React Hooks', () => {
       render(h(TestComponent));
       expect(screen.getByText('Count: 0')).toBeInTheDocument();
 
-      await store.dispatch('increment');
+      await act(() => store.dispatch('increment'));
       await waitFor(() => {
         expect(screen.getByText('Count: 1')).toBeInTheDocument();
       });
@@ -93,7 +93,7 @@ describe('React Hooks', () => {
       const initialRenderCount = renderCount;
 
       // Change name, not count
-      await store.dispatch('setName', 'Updated');
+      await act(() => store.dispatch('setName', 'Updated'));
       await waitFor(
         () => {
           // Should not have re-rendered
@@ -118,12 +118,14 @@ describe('React Hooks', () => {
       const afterMount = renderCount;
 
       // Change name several times — count selector must not trigger re-renders
-      await store.dispatch('setName', 'A');
-      await store.dispatch('setName', 'B');
-      await store.dispatch('setName', 'C');
+      await act(async () => {
+        await store.dispatch('setName', 'A');
+        await store.dispatch('setName', 'B');
+        await store.dispatch('setName', 'C');
+      });
 
       // Change count once — should trigger exactly one re-render
-      await store.dispatch('increment');
+      await act(() => store.dispatch('increment'));
 
       await waitFor(() => {
         expect(screen.getByText('Count: 1')).toBeInTheDocument();
@@ -256,7 +258,7 @@ describe('React Hooks', () => {
       render(h(Wrapper));
       expect(screen.getByText('Count: 0')).toBeInTheDocument();
 
-      await store.dispatch('increment');
+      await act(() => store.dispatch('increment'));
       await waitFor(() => {
         expect(screen.getByText('Count: 1')).toBeInTheDocument();
       });
