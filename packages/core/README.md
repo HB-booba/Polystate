@@ -14,6 +14,7 @@ Framework-agnostic state management core with **zero dependencies**.
 - **Memoized Selectors**: `createSelector()` for cheap derived state, no extra dependency
 - **Undo/Redo**: `withHistory()` for bounded in-app undo/redo history
 - **Multi-Store Sync**: `syncStores()` to mirror state across independent stores
+- **Action Recording & Replay**: `recordActions()`/`replayActions()` testing utilities
 
 ## Installation
 
@@ -205,6 +206,36 @@ stopSync();
 every subsequent source dispatch. Sync is one-directional — writes to the
 target never flow back to the source; call `syncStores` once per pair to
 mirror into more than one target.
+
+### Action Recording & Replay
+
+Testing utilities: record a real interaction as a list of dispatched
+actions, or replay a known action sequence against a store to assert on
+the result instead of hand-writing each dispatch/assert pair — useful for
+reproducing a bug report captured from DevTools action history.
+
+```typescript
+import { recordActions, replayActions } from '@polystate/core';
+
+// Record
+const recorder = recordActions(store);
+await store.dispatch('loadProducts', mockProducts);
+await store.dispatch('addProduct', newProduct);
+const actions = recorder.stop();
+// [{ type: 'loadProducts', payload: mockProducts }, { type: 'addProduct', payload: newProduct }]
+
+// Replay against a fresh store
+const { finalState, states } = await replayActions(createStore(initialState, storeActions), [
+  { type: 'loadProducts', payload: mockProducts },
+  { type: 'addProduct', payload: newProduct },
+  { type: 'deleteProduct', payload: 'id-1' },
+]);
+
+expect(finalState.products).toHaveLength(mockProducts.length);
+```
+
+`replayActions` accepts anything shaped like `{ type, payload }`, including
+`@polystate/devtools`'s exported `DevToolsAction[]` history directly.
 
 ### Slices
 
@@ -528,6 +559,21 @@ function syncStores<S, T>(
   target: Store<T>,
   merge: (sourceState: S, targetState: T) => T
 ): Unsubscriber;
+```
+
+### recordActions<T> / replayActions<T>
+
+Testing utilities for capturing and replaying dispatched actions.
+
+```typescript
+function recordActions<T>(store: Store<T>): ActionRecorder;
+// ActionRecorder: { stop(): RecordedAction[] }
+
+function replayActions<T>(
+  store: Store<T>,
+  actions: RecordedAction[]
+): Promise<ReplayResult<T>>;
+// ReplayResult<T>: { states: T[]; finalState: T }
 ```
 
 ## Type Safety

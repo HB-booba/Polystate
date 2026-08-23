@@ -35,6 +35,10 @@ export type { HistoryController, HistoryOptions } from './history';
 export { syncStores } from './sync';
 export type { SyncMerge } from './sync';
 
+// Action recording / replay (testing utilities)
+export { recordActions, replayActions } from './replay';
+export type { ActionRecorder, RecordedAction, ReplayResult } from './replay';
+
 // Middleware
 export { loadPersistedState, loggerMiddleware, persistMiddleware } from './middleware';
 export type { Middleware, MiddlewareContext } from './middleware';
