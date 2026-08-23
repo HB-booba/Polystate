@@ -31,6 +31,10 @@ export { createSelector } from './selector';
 export { withHistory } from './history';
 export type { HistoryController, HistoryOptions } from './history';
 
+// Multi-store sync
+export { syncStores } from './sync';
+export type { SyncMerge } from './sync';
+
 // Middleware
 export { loadPersistedState, loggerMiddleware, persistMiddleware } from './middleware';
 export type { Middleware, MiddlewareContext } from './middleware';

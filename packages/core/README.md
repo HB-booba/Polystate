@@ -13,6 +13,7 @@ Framework-agnostic state management core with **zero dependencies**.
 - **Selective Subscriptions**: Only re-render what changed
 - **Memoized Selectors**: `createSelector()` for cheap derived state, no extra dependency
 - **Undo/Redo**: `withHistory()` for bounded in-app undo/redo history
+- **Multi-Store Sync**: `syncStores()` to mirror state across independent stores
 
 ## Installation
 
@@ -180,6 +181,30 @@ store.clearHistory(); // discard past/future without changing state
 
 Dispatching a new action after `undo()` clears the redo stack, matching
 standard editor semantics.
+
+### Multi-Store Sync
+
+Keep one store's state mirrored into another without manually wiring a
+subscription — e.g. a shared "current user" slice used by several
+independent feature stores.
+
+```typescript
+import { syncStores } from '@polystate/core';
+
+// Mirror the products list into the orders store as a cache.
+const stopSync = syncStores(productsStore, ordersStore, (products, orders) => ({
+  ...orders,
+  cachedProducts: products.products,
+}));
+
+// Later, to stop mirroring:
+stopSync();
+```
+
+`merge` runs once immediately (so the target starts in sync) and again on
+every subsequent source dispatch. Sync is one-directional — writes to the
+target never flow back to the source; call `syncStores` once per pair to
+mirror into more than one target.
 
 ### Slices
 
@@ -491,6 +516,18 @@ function withHistory<T, A extends ActionMap<T>>(
   store: Store<T, A>,
   options?: HistoryOptions
 ): Store<T, A> & HistoryController;
+```
+
+### syncStores<S, T>
+
+Mirrors one store's state into another.
+
+```typescript
+function syncStores<S, T>(
+  source: Store<S>,
+  target: Store<T>,
+  merge: (sourceState: S, targetState: T) => T
+): Unsubscriber;
 ```
 
 ## Type Safety
