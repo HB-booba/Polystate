@@ -147,9 +147,11 @@ export abstract class PolystateService<
  *   loading: boolean;
  * }
  *
+ * const initialState: TodoState = { todos: [], loading: false };
+ *
  * @Injectable({ providedIn: 'root' })
- * export class TodoService extends createAngularService<TodoState>(
- *   { todos: [], loading: false },
+ * export class TodoService extends createAngularService(
+ *   initialState,
  *   {
  *     addTodo: (state, title: string) => ({
  *       ...state,

@@ -4,13 +4,17 @@
  */
 
 export interface TodoState {
-  todos: any[];
-  filter: string;
+  todos: Array<{
+            id: number;
+            title: string;
+            done: boolean;
+        }>;
+  filter: 'all' | 'active' | 'completed';
 }
 
 export interface TodoActions {
-  addTodo(payload: any): void;
-  toggleTodo(payload: any): void;
-  removeTodo(payload: any): void;
-  setFilter(payload: any): void;
+  addTodo(payload: string): void;
+  toggleTodo(payload: number): void;
+  removeTodo(payload: number): void;
+  setFilter(payload: 'all' | 'active' | 'completed'): void;
 }

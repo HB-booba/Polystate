@@ -40,7 +40,7 @@ const actions = {
 };
 
 @Injectable({ providedIn: 'root' })
-export class TodoService extends createAngularService<TodoState>(initialState, actions) {
+export class TodoService extends createAngularService(initialState, actions) {
     /** Stream of all todos. */
     todos$ = this.select$((state) => state.todos);
 

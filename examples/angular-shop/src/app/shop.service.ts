@@ -217,7 +217,7 @@ const actions = {
 
 @Injectable({ providedIn: 'root' })
 export class ShopService
-    extends createAngularService<ShopState>(initialState, actions)
+    extends createAngularService(initialState, actions)
 {
     // ── raw streams (selective subscriptions — only notify on change) ─────────
 

@@ -3,8 +3,7 @@
  * Do not edit manually - regenerate with: polystate generate
  */
 
-import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { createSelector } from 'reselect';
+import { configureStore, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // ============================================================================
 // State Type
@@ -91,12 +90,12 @@ const selectTodoState = (state: RootState) => state.todo;
 
 export const selectTodos = createSelector(
   selectTodoState,
-  (state) => state.todos
+  (state: TodoState) => state.todos
 );
 
 export const selectFilter = createSelector(
   selectTodoState,
-  (state) => state.filter
+  (state: TodoState) => state.filter
 );
 
 // ============================================================================
@@ -107,7 +106,6 @@ export const store = configureStore({
   reducer: {
     todo: todoSlice.reducer,
   },
-  devTools: process.env.NODE_ENV !== 'production',
 });
 
 export type RootState = ReturnType<typeof store.getState>;

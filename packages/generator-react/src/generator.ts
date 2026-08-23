@@ -24,8 +24,7 @@ export function generateReduxStore(definition: StoreDefinition): string {
  * Do not edit manually - regenerate with: polystate generate
  */
 
-import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { createSelector } from 'reselect';
+import { configureStore, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // ============================================================================
 // State Type
@@ -481,7 +480,7 @@ function generateSelectors(definition: StoreDefinition, name: string, storeName:
       const selectorName = `select${capitalize(key)}`;
       return `export const ${selectorName} = createSelector(
   select${storeName}State,
-  (state) => state.${key}
+  (state: ${storeName}State) => state.${key}
 );`;
     })
     .join('\n\n');
@@ -677,7 +676,7 @@ export function generateReduxStoreFromAST(ast: StoreAST): string {
   const selectors = fields
     .map((f) => {
       const sel = `select${capitalize(f.name)}`;
-      return `export const ${sel} = createSelector(\n  select${storeName}State,\n  (state) => state.${f.name}\n);`;
+      return `export const ${sel} = createSelector(\n  select${storeName}State,\n  (state: ${storeName}State) => state.${f.name}\n);`;
     })
     .join('\n\n');
 
@@ -695,8 +694,7 @@ export function generateReduxStoreFromAST(ast: StoreAST): string {
  * Do not edit manually - regenerate with: polystate generate
  */
 
-import { configureStore, createSlice, PayloadAction${asyncImport} } from '@reduxjs/toolkit';
-import { createSelector } from 'reselect';
+import { configureStore, createSelector, createSlice, PayloadAction${asyncImport} } from '@reduxjs/toolkit';
 
 // ============================================================================
 // State Type
@@ -746,7 +744,6 @@ export const store = configureStore({
   reducer: {
     ${name}: ${name}Slice.reducer,
   },
-  devTools: process.env.NODE_ENV !== 'production',
 });
 
 export type RootState = ReturnType<typeof store.getState>;

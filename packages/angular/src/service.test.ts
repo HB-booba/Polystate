@@ -25,7 +25,7 @@ const actions = {
   setFilter: (s: TodoState, f: 'all' | 'active' | 'done') => ({ ...s, filter: f }),
 };
 
-class TodoService extends createAngularService<TodoState>(initialState, actions) {}
+class TodoService extends createAngularService(initialState, actions) {}
 
 function makeSvc(): TodoService {
   TestBed.configureTestingModule({ providers: [TodoService] });
