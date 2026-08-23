@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@angular/core": "^17.3.12",
+    "zone.js": "^0.14.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "@changesets/changelog-github": "^0.5.1",
