@@ -3,7 +3,7 @@ name: CI/CD
 on:
   push:
     branches:
-      - main
+      - master
       - develop
     tags:
       - 'v*'
@@ -109,10 +109,14 @@ jobs:
 
       - name: Dry run package publish
         run: |
+          npm publish --workspace packages/definition --dry-run
           npm publish --workspace packages/core --dry-run
           npm publish --workspace packages/react --dry-run
           npm publish --workspace packages/angular --dry-run
           npm publish --workspace packages/devtools --dry-run
+          npm publish --workspace packages/generator-react --dry-run
+          npm publish --workspace packages/generator-angular --dry-run
+          npm publish --workspace packages/cli --dry-run
 
       - name: Restore workspace manifests
         if: always()
@@ -153,10 +157,14 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
+          npm publish --workspace packages/definition
           npm publish --workspace packages/core
           npm publish --workspace packages/react
           npm publish --workspace packages/angular
           npm publish --workspace packages/devtools
+          npm publish --workspace packages/generator-react
+          npm publish --workspace packages/generator-angular
+          npm publish --workspace packages/cli
 
       - name: Restore workspace manifests
         if: always()
@@ -173,9 +181,13 @@ jobs:
             See CHANGELOG.md for details.
 
             ## Packages
+            - @polystate/definition
             - @polystate/core
             - @polystate/react
             - @polystate/angular
             - @polystate/devtools
+            - @polystate/generator-react
+            - @polystate/generator-angular
+            - @polystate/cli
           draft: false
           prerelease: false
