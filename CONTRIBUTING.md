@@ -32,8 +32,7 @@ pnpm lint
 ### 🚨 Important: PRs Only
 
 - **No direct pushes to `master`** — all changes require a pull request
-- **No direct pushes to `develop`** — all changes require a pull request
-- Create a feature branch from `develop` for your work
+- Create a feature branch from `master` for your work
 - All CI checks must pass before your PR can be merged
 - At least one maintainer review is required
 
@@ -67,11 +66,11 @@ chore/upgrade-deps            # Maintenance
 
 ### Making Your Changes
 
-1. **Sync from `develop` and create your feature branch**:
+1. **Sync from `master` and create your feature branch**:
 
    ```bash
-   git checkout develop
-   git pull origin develop
+   git checkout master
+   git pull origin master
    git checkout -b feature/my-feature
    ```
 
@@ -344,7 +343,7 @@ pnpm test       # Run all tests
 pnpm build      # Verify build succeeds
 
 # 2. Verify git log has conventional commits
-git log --oneline develop..HEAD
+git log --oneline master..HEAD
 ```
 
 ### PR Requirements (Enforced)
@@ -352,7 +351,7 @@ git log --oneline develop..HEAD
 ✅ **Your PR must:**
 
 - [ ] Follow **conventional commit** format (validated by commitlint)
-- [ ] Target the **`develop` branch** (not `master`)
+- [ ] Target the **`master` branch**
 - [ ] Contain **one logical feature or fix** (no mixed concerns)
 - [ ] Have **clear description** of changes (use PR template)
 - [ ] Include **tests** for new functionality
@@ -388,14 +387,14 @@ A PR can be merged only when:
 - ✅ All CI checks pass (lint, test, build)
 - ✅ At least one maintainer approval
 - ✅ No requested changes
-- ✅ Branch is up to date with `develop`
+- ✅ Branch is up to date with `master`
 
 ### Branch Policy
 
-- **No direct pushes** to `master` or `develop`
-- **Contributors** must branch from `develop`
-- **Pull requests** must target `develop`
-- **`master`** is updated only by maintainers during releases
+- **No direct pushes** to `master` — all changes go through a pull request
+- **Contributors** must branch from `master`
+- **Pull requests** must target `master`
+- Releases are tagged (`vX.Y.Z`) directly off `master` once a PR merges
 
 ## CI/Validation Checks
 
@@ -404,7 +403,7 @@ All pull requests are automatically validated:
 ### Commitlint
 
 - Validates each commit follows **conventional commit format**
-- Run locally: `pnpm commitlint -- --from develop`
+- Run locally: `pnpm commitlint -- --from master`
 - **Failing this = PR can't be merged**
 
 ### ESLint

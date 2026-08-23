@@ -36,7 +36,7 @@ Before submitting, please verify:
 - [ ] **Code quality** — Linting passes: `pnpm lint`
 - [ ] **Builds successfully** — Build succeeds: `pnpm build`
 - [ ] **Follows scope** — This PR contains one logical feature/fix (no mixed concerns)
-- [ ] **Targets `develop`** — This PR targets the `develop` branch, not `master`
+- [ ] **Targets `master`** — This PR targets the `master` branch
 
 ---
 
